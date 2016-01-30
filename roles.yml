@@ -1,0 +1,37 @@
+php:
+  - server
+  - appsrv.helios
+  - appsrv.cms
+  - appsrv.owl
+  - appsrv.verified
+  - appsrv.whitelabel
+sftp:
+  - server
+  - sftp-server
+lb:
+  - lb
+  - server
+queue:
+  - server
+  - queue
+es:
+  - server
+  - elasticsearch.verified
+phoenix:
+  - server
+  - appsrv.phoenix
+util:
+  - server
+  - appsrv.phoenix-utils
+rsyslog:
+  - server
+  - rsyslog
+dnbi:
+  - server
+  - dnbi-microservices
+slave:
+  - server.security
+  - ci.slave
+nfs:
+  - storage
+  - server
