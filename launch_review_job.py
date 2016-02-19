@@ -15,10 +15,13 @@ class ReviewJob(object):
 
     ECS = 'ecs'
     EC2 = 'ec2'
+    CONFIGS = TestServers.get_configs()
+    PROFILE = CONFIGS['profile_name']
     AUTOSCALING = 'autoscaling'
-    AUTOSCALING_GROUP_NAME = 'jenkins_ec2_autoscaling_group'
+    AUTOSCALING_GROUP_NAME = CONFIGS["autoscaling_group_name"]
     TEST_SERVERS = TestServers.get_server_names()
-    ATTEMPT_LIMIT = 80 # 40 minutes
+    ATTEMPT_LIMIT = CONFIGS['attempt_limit']
+    CLUSTER_NAME = CONFIGS['cluster_name']
 
     logging.basicConfig(level=logging.INFO)
     log = logging.getLogger(__name__)
@@ -36,7 +39,7 @@ class ReviewJob(object):
         self.init_instance()
 
     def init_boto_clients(self):
-        session = Session(profile_name=self.ECS)
+        session = Session(profile_name=self.PROFILE)
         self.ecs_client = self.get_boto_client(session, self.ECS)
         self.autoscaling_client = self.get_boto_client(session, self.AUTOSCALING)
         self.ec2_client = self.get_boto_client(session, self.EC2)
@@ -208,7 +211,7 @@ class ReviewJob(object):
         clusters = self.ecs_client.list_clusters()
         cluster_arns = clusters['clusterArns']
         for cluster_arn in cluster_arns:
-            if 'jenki' in cluster_arn:
+            if self.CLUSTER_NAME in cluster_arn:
                 return cluster_arn
 
     def launch_instance(self):
