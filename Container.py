@@ -2,9 +2,10 @@ from TestServers import TestServers
 
 class Container(object):
 
-    MEMORY = 512
-    CPU = 512
-    IMAGE = 'dandb/salt_review:2015-8-3'
+    CONFIGS = TestServers.get_configs()
+    MEMORY = CONFIGS['container_memory']
+    CPU = CONFIGS['container_cpu']
+    IMAGE = CONFIGS['container_image']
 
     def __init__(self, family=None, test_server=None, master_ip=None, env='local'):
         self.family = family
