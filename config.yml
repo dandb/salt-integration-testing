@@ -13,3 +13,8 @@ profile_name: 'default'
 #Set equal to the first 5 characters of your ecs Cluster name (from jenkinsTemplate.py ecs_cluster())
 #TODO: INFRASYS-6745
 cluster_name: 'jenki'
+
+#Set as required for Docker Containers
+container_memory: 512
+container_cpu: 512
+container_image: 'dandb/salt_review:2015-8-3'
