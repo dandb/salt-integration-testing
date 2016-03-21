@@ -1,0 +1,5 @@
+.idea*
+*.pyc
+sit/*.pyc
+helpers/*.pyc
+infrastructure/*.pyc

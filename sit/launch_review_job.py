@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import boto3
 from boto3.session import Session
-from TestServers import TestServers
+from helpers.sit_helper import SITHelper
 from Container import Container
 from RedisClient import RedisClient
 from time import sleep
@@ -15,11 +15,11 @@ class ReviewJob(object):
 
     ECS = 'ecs'
     EC2 = 'ec2'
-    CONFIGS = TestServers.get_configs()
+    CONFIGS = SITHelper.get_configs()
     PROFILE = CONFIGS['profile_name']
     AUTOSCALING = 'autoscaling'
     AUTOSCALING_GROUP_NAME = CONFIGS["autoscaling_group_name"]
-    TEST_SERVERS = TestServers.get_server_names()
+    TEST_SERVERS = SITHelper.get_server_names()
     ATTEMPT_LIMIT = CONFIGS['attempt_limit']
     CLUSTER_NAME = CONFIGS['cluster_name']
 
