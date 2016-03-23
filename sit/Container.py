@@ -1,8 +1,8 @@
-from TestServers import TestServers
+from .helper.sit_helper import SITHelper
 
 class Container(object):
 
-    CONFIGS = TestServers.get_configs()
+    CONFIGS = SITHelper.get_configs()
     MEMORY = CONFIGS['container_memory']
     CPU = CONFIGS['container_cpu']
     IMAGE = CONFIGS['container_image']
