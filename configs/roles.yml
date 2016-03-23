@@ -6,8 +6,6 @@
 
 #php:
 #  - server
-#  - appsrv.cart
-#  - appsrv.microservice
 #lb:
 #  - lb
 #  - server

@@ -3,7 +3,7 @@ from troposphere.ecs import Cluster
 from troposphere.autoscaling import AutoScalingGroup, LaunchConfiguration 
 from troposphere.iam import PolicyType, Role, InstanceProfile  
 
-from UserData import UserData
+from user_data import UserData
 from helpers.sit_helper import SITHelper
 
 class SITTemplate(object):
@@ -19,6 +19,9 @@ class SITTemplate(object):
     MAX_SIZE = CONFIGS['max_size']
     MIN_SIZE = CONFIGS['min_size']
     SUBNET = CONFIGS['subnet']
+    CLUSTER_NAME = CONFIGS['cluster_name']
+    AUTOSCALING_GROUP_NAME = CONFIGS['autoscaling_group_name']
+    LAUNCH_CONFIGURATION_NAME = CONFIGS['launch_configuration_name']
 
     def __init__(self):
         self.template = Template()
@@ -31,7 +34,7 @@ class SITTemplate(object):
         self.template.add_description(self.TEMPLATE_DESCRIPTION)
         
         ecs_cluster = self.template.add_resource(Cluster(
-                'sitCluster'
+                self.CLUSTER_NAME 
             )
         )
 
@@ -123,7 +126,7 @@ class SITTemplate(object):
         }
 
         launchConfiguration = self.template.add_resource(LaunchConfiguration(
-                'sitLaunchConfiguration',
+                self.LAUNCH_CONFIGURATION_NAME, 
                 ImageId=self.AMI_ID,
                 IamInstanceProfile=Ref(ecsInstanceProfile),
                 InstanceType=self.INSTANCE_TYPE,
@@ -144,7 +147,7 @@ class SITTemplate(object):
         )
 
         autoScalingGroup = self.template.add_resource(AutoScalingGroup(
-                'sitAutoScalingGroup', 
+                self.AUTOSCALING_GROUP_NAME, 
                 MaxSize = self.MAX_SIZE,
                 MinSize = self.MIN_SIZE,
                 LaunchConfigurationName = Ref(launchConfiguration),

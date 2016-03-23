@@ -5,7 +5,7 @@ import os
 class SITHelper(object):
 
     @classmethod
-    def get_states_for_roles(cls, role):
+    def get_states_for_role(cls, role):
         roles = cls.get_configs('roles') 
         try:
             return roles[role]

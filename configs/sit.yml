@@ -1,17 +1,8 @@
-# Set equal to the name of your Autoscaling Group, requires setting a tag with key: 'Name' and value: 'XXX'
-# Boto3 call 
-autoscaling_group_name: 'jenkins_ec2_autoscaling_group'
-
-# max number of attempts used for task run-time, each attempt is separated by 30s
+# Max number of attempts used for task run-time, each attempt is separated by 30s
 attempt_limit: 80
 
 # aws profile
 profile_name: 'default'
-
-#Set equal to the first 5 characters of your ecs Cluster name (from jenkinsTemplate.py ecs_cluster())
-# INFRASYS-6745
-# TODO: Use boto3 call to retrieve cluster arn from cloudformation resources
-# cluster_name: 'jenki'
 
 # Docker container configs
 container_memory: 512
