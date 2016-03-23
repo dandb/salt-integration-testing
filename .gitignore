@@ -1,5 +1,9 @@
 .idea*
 *.pyc
+*.swp
 sit/*.pyc
+sit/*.swp
 helpers/*.pyc
+helpers/*.swp
 infrastructure/*.pyc
+infrastructure/*.swp
