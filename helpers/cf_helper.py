@@ -1,7 +1,9 @@
-import sys
+#!/usr/bin/env python
+
 import time
 import logging
 from boto3.session import Session
+
 from helpers.sit_helper import SITHelper
 from helpers.log import Log
 
@@ -13,47 +15,61 @@ class CFHelper(object):
     CREATE_FAILED = 'CREATE_FAILED'
     DELETE_FAILED = 'DELETE_FAILED'
     DELETE_COMPLETE = 'DELETE_COMPLETE'
+    FAILED_STATES = [CREATE_FAILED, DELETE_FAILED, DELETE_COMPLETE]
+    COMPLETE_STATES = [CREATE_COMPLETE]
 
     def __init__(self):
         session = Session(profile_name=self.CONFIGS['profile_name'])
         self.cf_client = session.client('cloudformation')
 
-    def get_stack_info(self, stack_name):
+    def validate_template(self, template_body):
+        logging.info('validating template')
         try:
-            return self.cf_client.describe_stacks(StackName=stack_name)['Stacks']
+            self.cf_client.validate_template(TemplateBody=template_body)
         except Exception as e:
-            return False 
+            Log.error('stack validation error', e)
 
     def create_stack(self, stack_name, template_body, tag_value):
+        logging.info('Creating stack: {0}'.format(stack_name))
         try:
-            return self.cf_client.create_stack(
+            self.cf_client.create_stack(
                 StackName=stack_name,
                 TemplateBody=template_body,
+                OnFailure='DELETE',
                 Capabilities=['CAPABILITY_IAM'],
                 Tags=[
                     {
-                        'Key': 'Name'
+                        'Key': 'Name',
                         'Value': tag_value 
                     }
                 ]    
             )['StackId']
         except Exception as e:
-            Log.error('Failed to create stack {0}', e)
+            Log.error('Failed to create stack {0}'.format(stack_name), e)
             
-    def stack_exists(stack_name):
-        return self.get_stack_info(stack_name):
+    def stack_exists(self, stack_name):
+        return self.get_stack_info(stack_name)
 
-    def stack_was_created_successfully(stack_name, attempt=1):
-        if attempt > 15:
+    def stack_was_created_successfully(self, stack_name, attempt=1):
+        if attempt > 25:
+            logging.info('Stack was not created in the alotted time')
             return False
         try:
             stack_info = self.get_stack_info(stack_name)
             stack_status = stack_info['StackStatus']
-            if stack_status == self.CREATE_COMPLETE:
+            if stack_status in self.COMPLETE_STATES:
                 return True
-            if stack_status in [self.CREATE_FAILED, self.DELETE_FAILED, self.DELETE_COMPLETE]:
+            if stack_status in self.FAILED_STATES:
                 return False
-            sys.sleep(20)
         except Exception as e:
             logging.info('There was a problem checking status of stack: {0}'.format(e))
+        logging.info('Stack creation still in progress')
+        time.sleep(20)
         return self.stack_was_created_successfully(stack_name, attempt+1)
+
+    def get_stack_info(self, stack_name):
+        try:
+            return self.cf_client.describe_stacks(StackName=stack_name)['Stacks'][0]
+        except Exception as e:
+            logging.info('stack info not found for: {0}'.format(stack_name))
+            return False 
