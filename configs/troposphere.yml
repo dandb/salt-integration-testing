@@ -15,6 +15,7 @@ security_groups:
 key_name:  
 # AMI ID of amazon-ecs-optimized  
 ami_id: 
+ami_url: 'https://aws.amazon.com/marketplace/search/results/ref=dtl_navgno_search_box?page=1&searchTerms=Amazon+ECS-Optimized+Amazon+Linux+AMI'
 
 ## Autoscaling Group configs
 autoscaling_group_name: 'sitAutoScalingGroup'

@@ -10,7 +10,7 @@ class SITHelper(object):
         try:
             return roles[role]
         except Exception as e: 
-            return 'Failed to find state list for role: {0}. error: {1}'.format(server, e)
+            return 'Failed to find state list for role: {0}. error: {1}'.format(role, e)
 
     @classmethod
     def get_roles(cls):
