@@ -71,7 +71,7 @@ class CFHelper(object):
         try:
             return self.cf_client.describe_stacks(StackName=stack_name)['Stacks'][0]
         except Exception as e:
-            logging.info('stack info not found for: {0}'.format(stack_name))
+            logging.info('stack info not found for: {0}. Error: {1}'.format(stack_name, e))
             return False 
 
     def get_resource_name(self, stack_name, logical_name):

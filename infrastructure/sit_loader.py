@@ -2,6 +2,7 @@
 
 import logging
 import time
+import subprocess
 
 from helpers.log import Log
 from helpers.cf_helper import CFHelper

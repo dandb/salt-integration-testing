@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from troposphere import Template, Ref, Join, autoscaling, cloudformation
 from troposphere.ecs import Cluster
 from troposphere.autoscaling import AutoScalingGroup, LaunchConfiguration 
@@ -5,6 +7,7 @@ from troposphere.iam import PolicyType, Role, InstanceProfile
 
 from user_data import UserData
 from helpers.sit_helper import SITHelper
+
 
 class SITTemplate(object):
 
@@ -38,7 +41,7 @@ class SITTemplate(object):
             )
         )
 
-        ecsInstanceRole= self.template.add_resource(Role(
+        ecs_instance_role = self.template.add_resource(Role(
                 'sitInstanceRole',
                 Path='/',
                 AssumeRolePolicyDocument={
@@ -53,17 +56,17 @@ class SITTemplate(object):
             )
         )
 
-        ecsInstanceProfile = self.template.add_resource(InstanceProfile(
+        ecs_instance_profile = self.template.add_resource(InstanceProfile(
                 'sitInstanceProfile',
                 Path='/',
-                Roles=[Ref(ecsInstanceRole)]
+                Roles=[Ref(ecs_instance_role)]
             )
         )
 
-        ecsInstancePolicy = self.template.add_resource(PolicyType(
+        ecs_instance_policy = self.template.add_resource(PolicyType(
                 'sitInstancePolicy',
                 PolicyName='ecs-policy',
-                Roles=[Ref(ecsInstanceRole)],
+                Roles=[Ref(ecs_instance_role)],
                 PolicyDocument={
                     "Statement": [{
                         "Effect": "Allow",
@@ -88,7 +91,7 @@ class SITTemplate(object):
         }    
 
         files = {
-            "/etc/cfn/cfn-hup.conf" : {
+            "/etc/cfn/cfn-hup.conf": {
                 "content" :  Join("", [
                     "[main]\n",
                     "stack=", Ref("AWS::StackId"), "\n",
@@ -97,27 +100,27 @@ class SITTemplate(object):
                 "mode": "000400",
                 "owner": "root",
                 "group": "root"
-             },
-             "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
-                 "content": Join("", [
-                     "[cfn-auto-reloader-hook]\n",
-                     "triggers=post.update\n",
-                     "path=Resources.sitLaunchConfiguration.Metadata.AWS::CloudFormation::Init\n",
-                     "action=/opt/aws/bin/cfn-init -v ",
-                     "         --stack ", Ref("AWS::StackName"),
-                     "         --resource sitLaunchConfiguration",
-                     "         --region ", Ref("AWS::Region"), "\n",
-                     "runas=root\n"
-                 ])
+            },
+            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                "content": Join("", [
+                    "[cfn-auto-reloader-hook]\n",
+                    "triggers=post.update\n",
+                    "path=Resources.{0}.Metadata.AWS::CloudFormation::Init\n".format(self.LAUNCH_CONFIGURATION_NAME),
+                    "action=/opt/aws/bin/cfn-init -v ",
+                    "         --stack ", Ref("AWS::StackName"),
+                    "         --resource {0}".format(self.LAUNCH_CONFIGURATION_NAME),
+                    "         --region ", Ref("AWS::Region"), "\n",
+                    "runas=root\n"
+                ])
              }
          }
 
         services = {
-            "sysvinit" : {
-                "cfn-hup" : { 
-                    "enabled" : "true", 
-                    "ensureRunning" : "true", 
-                    "files" : [
+            "sysvinit": {
+                "cfn-hup": {
+                    "enabled": "true",
+                    "ensureRunning": "true",
+                    "files": [
                         "/etc/cfn/cfn-hup.conf", 
                         "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
                     ]
@@ -125,10 +128,10 @@ class SITTemplate(object):
             }
         }
 
-        launchConfiguration = self.template.add_resource(LaunchConfiguration(
+        launch_configuration = self.template.add_resource(LaunchConfiguration(
                 self.LAUNCH_CONFIGURATION_NAME, 
                 ImageId=self.AMI_ID,
-                IamInstanceProfile=Ref(ecsInstanceProfile),
+                IamInstanceProfile=Ref(ecs_instance_profile),
                 InstanceType=self.INSTANCE_TYPE,
                 UserData=UserData.get_base64data(),
                 AssociatePublicIpAddress=True,
@@ -146,11 +149,11 @@ class SITTemplate(object):
             )
         )
 
-        autoScalingGroup = self.template.add_resource(AutoScalingGroup(
+        auto_scaling_group = self.template.add_resource(AutoScalingGroup(
                 self.AUTOSCALING_GROUP_NAME, 
                 MaxSize = self.MAX_SIZE,
                 MinSize = self.MIN_SIZE,
-                LaunchConfigurationName = Ref(launchConfiguration),
+                LaunchConfigurationName = Ref(launch_configuration),
                 VPCZoneIdentifier=[self.SUBNET]
             )
         )
