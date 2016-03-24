@@ -1,5 +1,6 @@
 from helpers.sit_helper import SITHelper
 
+
 class Container(object):
 
     CONFIGS = SITHelper.get_configs('sit')

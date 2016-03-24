@@ -310,6 +310,7 @@ class ReviewJob(object):
             self.terminate_instance()
         exit(error_code)
 
+
 def main():
     job = argv[1]
     build_number = argv[2]
