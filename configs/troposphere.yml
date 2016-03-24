@@ -1,0 +1,27 @@
+## CloudFormation stack name. Cannot contain underscores 
+stack_name: 'sit-tool'
+
+## Cluster configs
+cluster_name: 'sitCluster'
+
+## CloudFormation template description
+template_description: 'SIT (Salt Integration Testing) CloudFormation Template'
+
+## launch configuration configs
+launch_configuration_name: 'sitLaunchConfiguration'
+instance_type: 'c3.4xlarge'
+security_groups: 
+#  - 'sg-44dac528'
+key_name:  
+# AMI ID of amazon-ecs-optimized  
+ami_id: 
+
+## Autoscaling Group configs
+autoscaling_group_name: 'sitAutoScalingGroup'
+subnet:
+max_size: 20
+min_size: 0
+
+## General configs
+tag_key: 'Name'
+tag_value: 'sit_tool'

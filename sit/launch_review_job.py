@@ -1,30 +1,31 @@
 #!/usr/bin/env python
-import boto3
 from boto3.session import Session
-from TestServers import TestServers
-from Container import Container
-from RedisClient import RedisClient
 from time import sleep
 from sys import argv
 import json
 import yaml
 import logging
 
+from helpers.sit_helper import SITHelper
+from helpers.log import Log
+from helpers.cf_helper import CFHelper
+from ecs_container import Container
+from redis_client import RedisClient
+
 
 class ReviewJob(object):
 
     ECS = 'ecs'
     EC2 = 'ec2'
-    CONFIGS = TestServers.get_configs()
-    PROFILE = CONFIGS['profile_name']
     AUTOSCALING = 'autoscaling'
-    AUTOSCALING_GROUP_NAME = CONFIGS["autoscaling_group_name"]
-    TEST_SERVERS = TestServers.get_server_names()
-    ATTEMPT_LIMIT = CONFIGS['attempt_limit']
-    CLUSTER_NAME = CONFIGS['cluster_name']
-
-    logging.basicConfig(level=logging.INFO)
-    log = logging.getLogger(__name__)
+    SIT_CONFIGS = SITHelper.get_configs('sit')
+    TROPOSPHERE_CONFIGS = SITHelper.get_configs('troposphere')
+    PROFILE = SIT_CONFIGS['profile_name']
+    LOGICAL_AUTOSCALING_GROUP_NAME = TROPOSPHERE_CONFIGS['autoscaling_group_name']
+    LOGICAL_CLUSTER_NAME = TROPOSPHERE_CONFIGS['cluster_name']
+    STACK_NAME = TROPOSPHERE_CONFIGS['stack_name']
+    ROLES = SITHelper.get_roles()
+    ATTEMPT_LIMIT = SIT_CONFIGS['attempt_limit'] 
 
     def __init__(self, job_name=None, build_number=None, master_ip=None):
         self.family = self.join_items([job_name, build_number])
@@ -34,6 +35,7 @@ class ReviewJob(object):
         self.instance_was_terminated = False
         self.instance = False
         self.init_boto_clients()
+        self.cf_helper = CFHelper()
         self.cluster = self.get_cluster()
         self.autoscaling_group = self.get_autoscaling_group()
         self.init_instance()
@@ -56,15 +58,15 @@ class ReviewJob(object):
         try:
             instance_data = self.describe_instance([self.instance])
             private_ip = instance_data['Reservations'][0]['Instances'][0]['PrivateIpAddress']
-            self.log.info('{0} private ip: {1}'.format(self.instance, private_ip))
+            logging.info('{0} private ip: {1}'.format(self.instance, private_ip))
         except Exception as e:
-            self.log.warn('Failed to display instance private ip. Error: {0}'.format(e))
+            logging.warn('Failed to display instance private ip. Error: {0}'.format(e))
 
     def describe_instance(self, instance_ids):
         try:
             return self.ec2_client.describe_instances(InstanceIds=instance_ids)
         except Exception as e:
-            self.log.warn('Failed to describe instance(s): {0}. Error: {1}'.format(instance_ids, e))
+            logging.warn('Failed to describe instance(s): {0}. Error: {1}'.format(instance_ids, e))
 
     def run(self):
         tasks = self.register_tasks()
@@ -76,12 +78,7 @@ class ReviewJob(object):
 
     def get_autoscaling_group(self):
         try:
-            autoscaling_groups = self.autoscaling_client.describe_auto_scaling_groups()['AutoScalingGroups']
-            for autoscaling_group in autoscaling_groups:
-                tags = autoscaling_group['Tags']
-                for tag in tags:
-                    if tag['Key'] == 'Name' and tag['Value'] == self.AUTOSCALING_GROUP_NAME:
-                        return autoscaling_group['AutoScalingGroupName']
+            return self.cf_helper.get_resource_name(self.STACK_NAME, self.LOGICAL_AUTOSCALING_GROUP_NAME)
         except Exception as e:
             self.error('Unable to get the Autoscaling Group name', e)
 
@@ -91,33 +88,33 @@ class ReviewJob(object):
         sleep(10)
         instance = self.get_autoscale_instance()
         if not instance['LifecycleState'] == 'InService':
-            self.log.info('Waiting 10 seconds for instance to become active')
+            logging.info('Waiting 10 seconds for instance to become active')
             return self.wait_for_instance_to_be_active(attempt + 1)
         self.instance_was_launched = True
 
     def register_tasks(self):
         tasks = []
-        for server in self.TEST_SERVERS:
-            family = self.join_items([self.family, server])
-            self.register_task(family, server)
+        for role in self.ROLES:
+            family = self.join_items([self.family, role])
+            self.register_task(family, role)
             tasks.append(family)
         return tasks
 
-    def register_task(self, family, server):
+    def register_task(self, family, role):
         try:
             self.ecs_client.register_task_definition(
                 family=family,
-                containerDefinitions=[self.get_container_definitions(server, family)]
+                containerDefinitions=[self.get_container_definitions(role, family)]
             )
         except Exception as e:
-            self.error('Failed to register tasks for family: {0}, server: {1}'.format(family, server), e)
+            self.error('Failed to register tasks for family: {0}, role: {1}'.format(family, role), e)
 
-    def get_container_definitions(self, server, family):
-        container = Container(env='local', test_server=server, family=family, master_ip=self.master_ip)
+    def get_container_definitions(self, role, family):
+        container = Container(env='local', role=role, family=family, master_ip=self.master_ip)
         return container.get_container_definitions()
 
     def start_tasks(self, tasks):
-        self.log.info('Starting tasks')
+        logging.info('Starting tasks')
         try:
             task_ids = []
             for task in tasks:
@@ -138,12 +135,12 @@ class ReviewJob(object):
         try:
             status = filter(lambda task: task['lastStatus'] != "STOPPED", task_responses)
             if status:
-                self.log.info("Tasks are still running. Waiting for 30 seconds")
+                logging.info("Tasks are still running. Waiting for 30 seconds")
                 sleep(30)
                 return self.wait_for_tasks_to_complete(task_ids, attempt + 1)
         except Exception as e:
             self.error('Failed determining status of task', e)
-        self.log.info("Tasks are complete")
+        logging.info("Tasks are complete")
 
     def get_task_responses(self, task_ids):
         try:
@@ -154,18 +151,18 @@ class ReviewJob(object):
     def terminate_instance(self):
         if not self.instance_was_terminated:
             try:
-                self.log.info('Terminating instance: {0}'.format(self.instance))
+                logging.info('Terminating instance: {0}'.format(self.instance))
                 self.autoscaling_client.terminate_instance_in_auto_scaling_group(
                     InstanceId=self.instance,
                     ShouldDecrementDesiredCapacity=True
                 )
-                self.log.info('Terminated instance: {0}'.format(self.instance))
+                logging.info('Terminated instance: {0}'.format(self.instance))
                 self.instance_was_terminated = True
             except Exception as e:
-                self.log.info('Failed to terminate the instance: {0}. Decreasing desired instances. {1}'.format(self.instance, e))
+                logging.info('Failed to terminate the instance: {0}. Decreasing desired instances. {1}'.format(self.instance, e))
                 self.decrease_instance_count()
         else:
-            self.log.info('Instance was terminated: {0}'.format(self.instance))
+            logging.info('Instance was terminated: {0}'.format(self.instance))
 
     def decrease_instance_count(self):
         try:
@@ -177,11 +174,11 @@ class ReviewJob(object):
 
     def check_and_print_results(self):
         redis_client = RedisClient()
-        for server in self.TEST_SERVERS:
-            family = self.join_items([self.family, server])
+        for role in self.ROLES:
+            family = self.join_items([self.family, role])
             highstate_result = redis_client.get_highstate_result(family)
             try:
-                self.log.info('printing results for server: {0}'.format(server))
+                logging.info('printing results for server: {0}'.format(role))
                 parsed_result = json.loads(highstate_result)
                 return_results = parsed_result.pop('return')
                 print yaml.safe_dump(return_results), "\n"
@@ -200,7 +197,7 @@ class ReviewJob(object):
             failures = [failure in result for failure in possible_failures]
             return True in failures
         except:
-            self.log.info('Error finding if there was a failure in the result')
+            logging.info('Error finding if there was a failure in the result')
             return True
 
     def fail_build_if_failures_exist(self):
@@ -208,14 +205,13 @@ class ReviewJob(object):
             self.error('build is not successful')
 
     def get_cluster(self):
-        clusters = self.ecs_client.list_clusters()
-        cluster_arns = clusters['clusterArns']
-        for cluster_arn in cluster_arns:
-            if self.CLUSTER_NAME in cluster_arn:
-                return cluster_arn
+        try:
+            return self.cf_helper.get_resource_name(self.STACK_NAME, self.LOGICAL_CLUSTER_NAME)
+        except Exception as e:
+            self.error('Failed to retrieve the cluster')
 
     def launch_instance(self):
-        self.log.info('Launching instance')
+        logging.info('Launching instance')
         self.set_current_desired_capacity(self.get_current_desired_capacity() + 1)
 
     def set_current_desired_capacity(self, capacity=None):
@@ -235,20 +231,20 @@ class ReviewJob(object):
         # Check if new instance has actually launched. Call function recursively until new instance begins provisioning
         new_instance = [instance for instance in all_instances if instance not in current_instances]
         if not new_instance:
-            self.log.info('No new instance found. Waiting 10 seconds before checking again')
+            logging.info('No new instance found. Waiting 10 seconds before checking again')
             return self.get_launched_instance_name(current_instances, attempt + 1, 10)
-        self.log.info('New instance has launched: {0}'.format(new_instance))
+        logging.info('New instance has launched: {0}'.format(new_instance))
         return new_instance[0]
 
     def get_instance_arn_of_cluster_registered_instance(self, wait=60):
-        self.log.info("Waiting {0} seconds before checking if new instance is in the cluster".format(wait))
+        logging.info("Waiting {0} seconds before checking if new instance is in the cluster".format(wait))
         sleep(wait)
         cluster_instances = self.get_cluster_instances()
         cluster_has_instance = self.cluster_has_instance(cluster_instances)
         if cluster_instances and cluster_has_instance:
-            self.log.info("Instance successfully registered into cluster")
+            logging.info("Instance successfully registered into cluster")
             return cluster_has_instance[0]
-        self.log.info("New instance not in cluster yet. Must give it another shot...")
+        logging.info("New instance not in cluster yet. Must give it another shot...")
         return self.get_instance_arn_of_cluster_registered_instance(30)
 
     def get_current_desired_capacity(self):
@@ -303,7 +299,7 @@ class ReviewJob(object):
             self.error('unable to join items: {0} with delimeter: {1}.'.format(items, delimeter), e)
 
     def error(self, message, e=None, error_code=2):
-        self.log.info('{0}. Exception: {1}'.format(message, e))
+        logging.info('{0}. Exception: {1}'.format(message, e))
         if self.instance_was_launched:
             self.terminate_instance()
         exit(error_code)
@@ -316,4 +312,5 @@ def main():
     review_job.run()
 
 if __name__ == '__main__':
+    Log.setup()
     main()
