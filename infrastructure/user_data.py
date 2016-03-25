@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from troposphere import Base64, Join, Ref
 
 from helpers.sit_helper import SITHelper
@@ -7,16 +9,13 @@ class UserData(object):
 
     CONFIGS = SITHelper.get_configs('troposphere')
     LAUNCH_CONFIGURATION_NAME = CONFIGS['launch_configuration_name']
-    AUTOSCALING_GROUP_NAME= CONFIGS['autoscaling_group_name']
+    AUTOSCALING_GROUP_NAME = CONFIGS['autoscaling_group_name']
 
     @classmethod
-    def get_base64data(cls):
+    def get_base64_data(cls):
         cfn_script = Join('', [
             "#!/bin/bash -xe\n",
-            'cat << EOD > /etc/resolv.conf\n',
-            'nameserver 10.24.20.40\n',
-            'nameserver 172.16.22.25\n',
-            'EOD\n',  
+            '{0}'.format(SITHelper.get_custom_user_data()),
             "yum install -y aws-cfn-bootstrap\n",
 
             "/opt/aws/bin/cfn-init -v ",
@@ -31,3 +30,6 @@ class UserData(object):
         ])
         return Base64(cfn_script)
 
+
+if __name__ == '__main__':
+    print UserData.get_base64_data()

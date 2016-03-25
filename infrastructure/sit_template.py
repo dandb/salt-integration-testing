@@ -7,6 +7,7 @@ from troposphere.iam import PolicyType, Role, InstanceProfile
 
 from user_data import UserData
 from helpers.sit_helper import SITHelper
+from helpers.sit_template_helper import SITTemplateHelper
 
 
 class SITTemplate(object):
@@ -27,6 +28,7 @@ class SITTemplate(object):
     LAUNCH_CONFIGURATION_NAME = CONFIGS['launch_configuration_name']
 
     def __init__(self):
+        SITTemplateHelper().validate()
         self.template = Template()
         self.init_template()
 
@@ -133,7 +135,7 @@ class SITTemplate(object):
                 ImageId=self.AMI_ID,
                 IamInstanceProfile=Ref(ecs_instance_profile),
                 InstanceType=self.INSTANCE_TYPE,
-                UserData=UserData.get_base64data(),
+                UserData=UserData.get_base64_data(),
                 AssociatePublicIpAddress=True,
                 SecurityGroups=self.SECURITY_GROUPS,
                 KeyName=self.KEY_NAME,
@@ -151,9 +153,9 @@ class SITTemplate(object):
 
         auto_scaling_group = self.template.add_resource(AutoScalingGroup(
                 self.AUTOSCALING_GROUP_NAME, 
-                MaxSize = self.MAX_SIZE,
-                MinSize = self.MIN_SIZE,
-                LaunchConfigurationName = Ref(launch_configuration),
+                MaxSize=self.MAX_SIZE,
+                MinSize=self.MIN_SIZE,
+                LaunchConfigurationName=Ref(launch_configuration),
                 VPCZoneIdentifier=[self.SUBNET]
             )
         )

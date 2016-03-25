@@ -1,16 +1,7 @@
 .idea*
 *egg*
 build
-*.pyc
-*.swp
-*.swo
-sit/*.pyc
-sit/*.swp
-sit/*.swo
-helpers/*.pyc
-helpers/*.swp
-helpers/*.swp
-infrastructure/*.pyc
-infrastructure/*.swp
-infrastructure/*.swo
+**/*.pyc
+**/*.swp
+**/*.swo
 
