@@ -24,3 +24,8 @@ class SITHelper(object):
     def get_configs(config_file):
         with open('configs/{0}.yml'.format(config_file), 'r') as configs:
             return yaml.load(configs)
+
+    @staticmethod
+    def get_custom_user_data():
+        with open('configs/custom_user_data.sh', 'r') as custom_user_data:
+            return custom_user_data.read()

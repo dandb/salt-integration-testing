@@ -12,6 +12,7 @@ from helpers.log import Log
 from helpers.cf_helper import CFHelper
 from ecs_container import Container
 from redis_client import RedisClient
+from sit.check_sit import CheckSIT
 
 
 class ReviewJob(object):
@@ -29,8 +30,8 @@ class ReviewJob(object):
     ATTEMPT_LIMIT = SIT_CONFIGS['attempt_limit'] 
 
     def __init__(self, job_name=None, build_number=None, master_ip=None):
+        CheckSIT().run()
         self.cf_helper = CFHelper()
-        self.check_stack_exists()
         self.family = self.join_items([job_name, build_number])
         self.master_ip = master_ip
         self.is_build_successful = True
@@ -41,10 +42,6 @@ class ReviewJob(object):
         self.cluster = self.get_cluster()
         self.autoscaling_group = self.get_autoscaling_group()
         self.init_instance()
-
-    def check_stack_exists(self):
-        if not self.cf_helper.stack_exists(self.STACK_NAME):
-            Log.error('Stack "{0}" does not exist, please follow README to set up infrastructure'.format(self.STACK_NAME))
 
     def init_boto_clients(self):
         session = Session(profile_name=self.PROFILE)
