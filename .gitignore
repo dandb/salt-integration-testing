@@ -1,0 +1,7 @@
+.idea*
+*egg*
+build
+**/*.pyc
+**/*.swp
+**/*.swo
+
