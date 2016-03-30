@@ -1,0 +1,13 @@
+{
+    "status_code": 400, 
+    "data": {
+        "ResponseMetadata": {
+            "HTTPStatusCode": 400, 
+            "RequestId": ""
+        }, 
+        "Error": {
+            "Message": "The subnet ID 'subnet-fake' does not exist", 
+            "Code": "InvalidSubnetID.NotFound"
+        }
+    }
+}

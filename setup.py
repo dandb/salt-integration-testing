@@ -2,6 +2,7 @@
 
 import os
 from custom_install import CustomInstall
+from custom_coverage import CustomCoverage
 from setuptools import setup
 
 install_requires = [
@@ -12,9 +13,11 @@ install_requires = [
 ]
 
 tests_require = [
+    'nose',
     'placebo',
     'boto3',
-    'PyYaml'
+    'PyYaml',
+    'mock'
 ]
 
 
@@ -32,8 +35,9 @@ setup(
     url="https://github.com/dandb/salt-integration-testing",
     packages=['Sit'],
     include_package_data=True,
-    cmdclass={'troposphere': CustomInstall},
+    cmdclass={'troposphere': CustomInstall, 'coverage': CustomCoverage},
     install_requires=install_requires,
     tests_require=tests_require,
+    test_suite="tests/*",
     long_description=read('README.md') + '\n\n' + read('CHANGES'),
 )

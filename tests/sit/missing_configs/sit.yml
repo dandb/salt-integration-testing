@@ -1,0 +1,10 @@
+# Max number of attempts used for task run-time, each attempt is separated by 30s
+attempt_limit:
+
+# aws profile
+profile_name: 'default'
+
+# Docker container configs
+container_memory: 512
+container_cpu: 512
+container_image: 'dandb/salt_review:2015-8-7'

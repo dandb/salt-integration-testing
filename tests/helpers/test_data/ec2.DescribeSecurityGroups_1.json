@@ -1,0 +1,17 @@
+{
+    "status_code": 200, 
+    "data": {
+        "SecurityGroups": [
+            {
+                "GroupName": "test",
+                "VpcId": "vpc-123456",
+                "OwnerId": "fake",
+                "GroupId": "fake"
+            }
+        ], 
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": ""
+        }
+    }
+}

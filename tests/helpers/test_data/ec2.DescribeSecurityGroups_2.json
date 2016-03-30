@@ -1,0 +1,13 @@
+{
+    "status_code": 400, 
+    "data": {
+        "ResponseMetadata": {
+            "HTTPStatusCode": 400, 
+            "RequestId": "7059d474-e94b-4efc-8689-ff445b75ee05"
+        }, 
+        "Error": {
+            "Message": "Invalid id: \"sg-fake\"", 
+            "Code": "InvalidGroupId.Malformed"
+        }
+    }
+}

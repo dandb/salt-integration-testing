@@ -1,0 +1,15 @@
+{
+    "status_code": 200,
+    "data": {
+        "KeyPairs": [
+            {
+                "KeyName": "SEB",
+                "KeyFingerprint": "5s:fa:ke:da:ta"
+            }
+        ],
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200,
+            "RequestId": ""
+        }
+    }
+}

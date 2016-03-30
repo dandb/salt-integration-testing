@@ -10,7 +10,7 @@ from helpers.log import Log
 
 class CFHelper(object):
 
-    CONFIGS = SITHelper.get_configs('sit')
+    CONFIGS = SITHelper().get_configs('sit')
     CREATE_COMPLETE = 'CREATE_COMPLETE'
     CREATE_FAILED = 'CREATE_FAILED'
     DELETE_FAILED = 'DELETE_FAILED'
@@ -23,7 +23,7 @@ class CFHelper(object):
         self.cf_client = session.client('cloudformation')
 
     def validate_template(self, template_body):
-        logging.info('validating template')
+        logging.info('Validating template')
         try:
             self.cf_client.validate_template(TemplateBody=template_body)
         except Exception as e:
