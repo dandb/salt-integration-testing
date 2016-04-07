@@ -1,0 +1,5 @@
+nose
+placebo
+boto3
+PyYaml
+mock

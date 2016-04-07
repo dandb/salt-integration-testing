@@ -2,24 +2,20 @@
 
 import os
 from custom_install import CustomInstall
+from custom_coverage import CustomCoverage
 from setuptools import setup
-
-install_requires = [
-    'boto3',
-    'PyYaml',
-    'troposphere',
-    'redis'
-]
-
-tests_require = [
-    'placebo',
-    'boto3',
-    'PyYaml'
-]
-
 
 def read(file_name):
     return open(os.path.join(os.path.dirname(__file__), file_name)).read()
+
+install_requires = [
+    read('requirements.txt')
+]
+
+tests_require = [
+    read('tests/requirements.txt')
+]
+
 
 setup(
     name="SIT",
@@ -32,8 +28,9 @@ setup(
     url="https://github.com/dandb/salt-integration-testing",
     packages=['Sit'],
     include_package_data=True,
-    cmdclass={'troposphere': CustomInstall},
+    cmdclass={'troposphere': CustomInstall, 'coverage': CustomCoverage},
     install_requires=install_requires,
     tests_require=tests_require,
+    test_suite="tests/*",
     long_description=read('README.md') + '\n\n' + read('CHANGES'),
 )

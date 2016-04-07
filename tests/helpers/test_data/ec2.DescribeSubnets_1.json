@@ -1,0 +1,20 @@
+{
+    "status_code": 200, 
+    "data": {
+        "Subnets": [
+            {
+                "CidrBlock": "",
+                "MapPublicIpOnLaunch": false, 
+                "DefaultForAz": false, 
+                "State": "available", 
+                "AvailabilityZone": "",
+                "SubnetId": "subnet-123456",
+                "AvailableIpAddressCount": 236
+            }
+        ], 
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": ""
+        }
+    }
+}

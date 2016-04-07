@@ -1,0 +1,13 @@
+{
+    "status_code": 400, 
+    "data": {
+        "ResponseMetadata": {
+            "HTTPStatusCode": 400, 
+            "RequestId": ""
+        }, 
+        "Error": {
+            "Message": "The image id '[ami-fake']' does not exist",
+            "Code": "InvalidAMIID.NotFound"
+        }
+    }
+}

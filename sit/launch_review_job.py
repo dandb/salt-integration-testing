@@ -20,13 +20,14 @@ class ReviewJob(object):
     ECS = 'ecs'
     EC2 = 'ec2'
     AUTOSCALING = 'autoscaling'
-    SIT_CONFIGS = SITHelper.get_configs('sit')
-    TROPOSPHERE_CONFIGS = SITHelper.get_configs('troposphere')
+    SIT_HELPER = SITHelper()
+    SIT_CONFIGS = SIT_HELPER.get_configs('sit')
+    TROPOSPHERE_CONFIGS = SIT_HELPER.get_configs('troposphere')
     PROFILE = SIT_CONFIGS['profile_name']
     LOGICAL_AUTOSCALING_GROUP_NAME = TROPOSPHERE_CONFIGS['autoscaling_group_name']
     LOGICAL_CLUSTER_NAME = TROPOSPHERE_CONFIGS['cluster_name']
     STACK_NAME = TROPOSPHERE_CONFIGS['stack_name']
-    ROLES = SITHelper.get_roles()
+    ROLES = SIT_HELPER.get_roles()
     ATTEMPT_LIMIT = SIT_CONFIGS['attempt_limit'] 
 
     def __init__(self, job_name=None, build_number=None, master_ip=None):

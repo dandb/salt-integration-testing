@@ -1,0 +1,22 @@
+{
+    "status_code": 200, 
+    "data": {
+        "Images": [
+            {
+                "Architecture": "x86_64",
+                "ImageLocation": "aws-marketplace/amzn-ami-2015.03.g-amazon-ecs-optimized-4ce33fd9-63ff-4f35-8d3a-939b641f1931-ami-4fe4852a.2",
+                "RootDeviceType": "ebs", 
+                "OwnerId": "testdata",
+                "RootDeviceName": "/dev/xvda", 
+                "CreationDate": "2015-09-03T23:44:26.000Z", 
+                "Public": false, 
+                "ImageType": "machine", 
+                "Description": "Amazon Linux AMI 2015.03.g x86_64 ECS HVM GP2"
+            }
+        ], 
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": ""
+        }
+    }
+}

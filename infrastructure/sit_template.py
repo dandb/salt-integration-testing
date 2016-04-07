@@ -12,7 +12,7 @@ from helpers.sit_template_helper import SITTemplateHelper
 
 class SITTemplate(object):
 
-    CONFIGS = SITHelper.get_configs('troposphere')
+    CONFIGS = SITHelper().get_configs('troposphere')
     TEMPLATE_DESCRIPTION = CONFIGS["template_description"]
     INSTANCE_TYPE = CONFIGS["instance_type"]
     SECURITY_GROUPS = CONFIGS["security_groups"]
@@ -135,7 +135,7 @@ class SITTemplate(object):
                 ImageId=self.AMI_ID,
                 IamInstanceProfile=Ref(ecs_instance_profile),
                 InstanceType=self.INSTANCE_TYPE,
-                UserData=UserData.get_base64_data(),
+                UserData=UserData().get_base64_data(),
                 AssociatePublicIpAddress=True,
                 SecurityGroups=self.SECURITY_GROUPS,
                 KeyName=self.KEY_NAME,

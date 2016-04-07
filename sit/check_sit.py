@@ -7,15 +7,16 @@ from helpers.log import Log
 
 class CheckSIT(object):
 
-    ROLES = SITHelper.get_roles()
-    SIT_CONFIGS = SITHelper.get_configs('sit')
-    TROPOSPHERE_CONFIGS = SITHelper.get_configs('troposphere')
+    SIT_HELPER = SITHelper()
+    ROLES = SIT_HELPER.get_roles()
+    SIT_CONFIGS = SIT_HELPER.get_configs('sit')
+    TROPOSPHERE_CONFIGS = SIT_HELPER.get_configs('troposphere')
 
     def __init__(self):
         self.cf_helper = CFHelper()
 
     def check_configs_are_set(self):
-        missing_configs = [config for config in self.SIT_CONFIGS if config is None]
+        missing_configs = [config for config, value in self.SIT_CONFIGS.iteritems() if value is None]
         if missing_configs:
             Log.error('The following configs are not set: {0}'.format(missing_configs))
 
@@ -24,7 +25,7 @@ class CheckSIT(object):
             Log.error('roles.yml file is not setup properly. You require at least one role to test')
 
     def check_roles_not_empty(self):
-        empty_roles = [role for role in self.ROLES if not SITHelper.get_states_for_role(role)]
+        empty_roles = [role for role in self.ROLES if not self.SIT_HELPER.get_states_for_role(role)]
         if empty_roles:
             Log.error('The following servers are missing roles inside of roles.yml file: {0}'.format(empty_roles))
 
