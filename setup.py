@@ -5,24 +5,17 @@ from custom_install import CustomInstall
 from custom_coverage import CustomCoverage
 from setuptools import setup
 
+def read(file_name):
+    return open(os.path.join(os.path.dirname(__file__), file_name)).read()
+
 install_requires = [
-    'boto3',
-    'PyYaml',
-    'troposphere',
-    'redis'
+    read('requirements.txt')
 ]
 
 tests_require = [
-    'nose',
-    'placebo',
-    'boto3',
-    'PyYaml',
-    'mock'
+    read('tests/requirements.txt')
 ]
 
-
-def read(file_name):
-    return open(os.path.join(os.path.dirname(__file__), file_name)).read()
 
 setup(
     name="SIT",
