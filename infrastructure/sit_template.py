@@ -162,4 +162,4 @@ class SITTemplate(object):
         
 
 if __name__ == '__main__':
-    print SITTemplate().template.to_json()
+    SITTemplate().print_template()
