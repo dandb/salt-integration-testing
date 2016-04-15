@@ -161,6 +161,10 @@ The following assumptions are made in utilizing this project:
 ## Contributing to SIT
   * Please create a pull-request (preferably referring to an issue) with a single, meaningful commit message stating what you are accomplishing.
   * Add unit tests to new code
+    Before running unit tests, install the necessary requirements:
+    ```python
+    pip install -r /path/to/sit/tests/requirements.txt
+    ```
   * Ensure all unit tests pass and coverage has not dropped
     ```
     python setup.py nosetests
