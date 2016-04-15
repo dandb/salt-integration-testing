@@ -1,5 +1,6 @@
 import unittest
 from nose.tools import raises
+from boto3.session import Session
 
 from sit.check_sit import CheckSIT
 from helpers.sit_helper import SITHelper
@@ -9,7 +10,8 @@ from mock import MagicMock
 class CheckSITTest(unittest.TestCase):
 
     def setUp(self):
-        self.check_sit = CheckSIT()
+        session = Session(region_name='us-west-1')
+        self.check_sit = CheckSIT(session)
 
     def set_values(self, configs_location):
         self.check_sit.SIT_HELPER = SITHelper(configs_directory=configs_location)

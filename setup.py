@@ -26,7 +26,7 @@ setup(
     license="GPLv3",
     keywords="Salt SaltStack Roles Test Docker AWS EC2 AutoScale AutoScaling Group ECS EC2 Container Service Integration Testing",
     url="https://github.com/dandb/salt-integration-testing",
-    packages=['Sit'],
+    packages=['sit'],
     include_package_data=True,
     cmdclass={'troposphere': CustomInstall, 'coverage': CustomCoverage},
     install_requires=install_requires,

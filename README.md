@@ -1,4 +1,4 @@
-# Salt Integration Testing (SIT)
+# Salt Integration Testing (SIT) [![Build Status](https://travis-ci.org/dandb/salt-integration-testing.svg)](https://travis-ci.org/dandb/salt-integration-testing) [![Coverage Status](https://coveralls.io/repos/dandb/salt-integration-testing/badge.svg?branch=master&service=github)](https://coveralls.io/github/dandb/salt-integration-testing?branch=master)
 
 Open source project that allows users to test applying states to roles using AWS ECS (Docker).
 Great for integrating within your CI/CD environment!

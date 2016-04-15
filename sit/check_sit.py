@@ -12,8 +12,8 @@ class CheckSIT(object):
     SIT_CONFIGS = SIT_HELPER.get_configs('sit')
     TROPOSPHERE_CONFIGS = SIT_HELPER.get_configs('troposphere')
 
-    def __init__(self):
-        self.cf_helper = CFHelper()
+    def __init__(self, session=None):
+        self.cf_helper = CFHelper(session)
 
     def check_configs_are_set(self):
         missing_configs = [config for config, value in self.SIT_CONFIGS.iteritems() if value is None]

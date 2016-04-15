@@ -2,7 +2,7 @@
 attempt_limit: 80
 
 # aws profile
-profile_name: 'default'
+profile_name: ''
 
 # Docker container configs
 container_memory: 512
