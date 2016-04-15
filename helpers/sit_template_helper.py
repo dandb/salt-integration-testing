@@ -19,9 +19,9 @@ class SITTemplateHelper(object):
     SECURITY_GROUPS = CONFIGS['security_groups']
     SUBNET = CONFIGS['subnet']
     
-    def __init__(self):
-        self.cf_helper = CFHelper()
-        self.ec2_helper = EC2Helper()
+    def __init__(self, session=None):
+        self.cf_helper = CFHelper(session)
+        self.ec2_helper = EC2Helper(session)
     
     def validate_stack_exists(self):
         if self.cf_helper.stack_exists(self.STACK_NAME):

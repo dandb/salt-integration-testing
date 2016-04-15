@@ -27,8 +27,8 @@ class SITTemplate(object):
     AUTOSCALING_GROUP_NAME = CONFIGS['autoscaling_group_name']
     LAUNCH_CONFIGURATION_NAME = CONFIGS['launch_configuration_name']
 
-    def __init__(self):
-        SITTemplateHelper().validate()
+    def __init__(self, session=None):
+        SITTemplateHelper(session).validate()
         self.template = Template()
         self.init_template()
 

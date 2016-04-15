@@ -9,7 +9,6 @@ from helpers.ec2_helper import EC2Helper
 class EC2HelperTest(unittest.TestCase):
     
     def setUp(self):
-        self.ec2_helper = EC2Helper()
         session = Session()
         current_dir = os.path.dirname(os.path.realpath(__file__))
         test_dir = '{0}/test_data'.format(current_dir)

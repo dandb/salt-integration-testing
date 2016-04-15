@@ -18,8 +18,9 @@ class CFHelper(object):
     FAILED_STATES = [CREATE_FAILED, DELETE_FAILED, DELETE_COMPLETE]
     COMPLETE_STATES = [CREATE_COMPLETE]
 
-    def __init__(self):
-        session = Session(profile_name=self.CONFIGS['profile_name'])
+    def __init__(self, session=None):
+        if session is None:
+            session = Session(profile_name=self.CONFIGS['profile_name'])
         self.cf_client = session.client('cloudformation')
 
     def validate_template(self, template_body):
