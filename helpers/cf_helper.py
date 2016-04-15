@@ -10,17 +10,13 @@ from helpers.log import Log
 
 class CFHelper(object):
 
-    CONFIGS = SITHelper().get_configs('sit')
-    CREATE_COMPLETE = 'CREATE_COMPLETE'
-    CREATE_FAILED = 'CREATE_FAILED'
-    DELETE_FAILED = 'DELETE_FAILED'
-    DELETE_COMPLETE = 'DELETE_COMPLETE'
-    FAILED_STATES = [CREATE_FAILED, DELETE_FAILED, DELETE_COMPLETE]
-    COMPLETE_STATES = [CREATE_COMPLETE]
+    FAILED_STATES = ['CREATE_FAILED', 'DELETE_FAILED', 'DELETE_COMPLETE']
+    COMPLETE_STATES = ['CREATE_COMPLETE']
 
-    def __init__(self, session=None):
+    def __init__(self, configs_directory='configs', session=None):
         if session is None:
-            session = Session(profile_name=self.CONFIGS['profile_name'])
+            sit_configs = SITHelper(configs_directory).get_configs('sit')
+            session = Session(profile_name=sit_configs['profile_name'])
         self.cf_client = session.client('cloudformation')
 
     def validate_template(self, template_body):
@@ -51,7 +47,7 @@ class CFHelper(object):
     def stack_exists(self, stack_name):
         return self.get_stack_info(stack_name)
 
-    def stack_was_created_successfully(self, stack_name, attempt=1):
+    def stack_was_created_successfully(self, stack_name, attempt=1, sleep_time=20):
         if attempt > 25:
             logging.info('Stack was not created in the alotted time')
             return False
@@ -64,8 +60,8 @@ class CFHelper(object):
                 return False
         except Exception as e:
             logging.info('There was a problem checking status of stack: {0}'.format(e))
-        logging.info('Stack creation still in progress')
-        time.sleep(20)
+        logging.info('Stack creation still in progress. Waiting {0} seconds'.format(sleep_time))
+        time.sleep(sleep_time)
         return self.stack_was_created_successfully(stack_name, attempt+1)
 
     def get_stack_info(self, stack_name):

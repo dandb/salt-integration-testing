@@ -8,11 +8,10 @@ from helpers.sit_helper import SITHelper
 
 class EC2Helper(object):
 
-    CONFIGS = SITHelper().get_configs('sit')
-
-    def __init__(self, session=None):
+    def __init__(self, configs_directory='configs', session=None):
         if session is None:
-            session = Session(profile_name=self.CONFIGS['profile_name'])
+            sit_configs = SITHelper(configs_directory).get_configs('sit')
+            session = Session(profile_name=sit_configs['profile_name'])
         self.ec2_client = session.client('ec2')
 
     def describe_key_pairs(self, key_names):

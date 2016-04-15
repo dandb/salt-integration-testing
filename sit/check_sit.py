@@ -12,7 +12,7 @@ class CheckSIT(object):
         self.ROLES = self.SIT_HELPER.get_roles()
         self.SIT_CONFIGS = self.SIT_HELPER.get_configs('sit')
         self.TROPOSPHERE_CONFIGS = self.SIT_HELPER.get_configs('troposphere')
-        self.cf_helper = CFHelper(session)
+        self.cf_helper = CFHelper(configs_directory=configs_directory, session=session)
 
     def check_configs_are_set(self):
         missing_configs = [config for config, value in self.SIT_CONFIGS.iteritems() if value is None]

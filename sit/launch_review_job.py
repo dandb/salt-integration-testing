@@ -35,7 +35,7 @@ class ReviewJob(object):
         self.ATTEMPT_LIMIT = sit_configs['attempt_limit']
         self.SAVE_LOGS = sit_configs['save_logs']
         self.HIGHSTATE_LOG_DIR = sit_configs['highstate_log_dir']
-        self.cf_helper = CFHelper(session=session)
+        self.cf_helper = CFHelper(configs_directory=configs_directory, session=session)
         self.family = self.join_items([job_name, build_number])
         self.master_ip = master_ip
         self.is_build_successful = True

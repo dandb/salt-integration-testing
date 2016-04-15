@@ -14,7 +14,9 @@ class EC2HelperTest(unittest.TestCase):
         test_dir = '{0}/test_data'.format(current_dir)
         pill = placebo.attach(session, test_dir)
         pill.playback()
-        self.ec2_helper_placebo = EC2Helper(session)
+
+        test_config_dir = 'tests/sit/configs'
+        self.ec2_helper_placebo = EC2Helper(configs_directory=test_config_dir, session=session)
 
     def test_describe_key_pairs(self):
         positive_result = self.ec2_helper_placebo.describe_key_pairs(['SEB'])
