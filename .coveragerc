@@ -3,4 +3,6 @@
 exclude_lines =
     if __name__ == .__main__.:
 
-omit = custom*
+omit = 
+    custom*
+    setup*
