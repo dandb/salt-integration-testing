@@ -163,7 +163,7 @@ The following assumptions are made in utilizing this project:
   * Add unit tests to new code
   * Ensure all unit tests pass and coverage has not dropped
     ```
-    python setup.py nosetests
+    python setup.py test
     ```
 
   * To check coverage, you can run:

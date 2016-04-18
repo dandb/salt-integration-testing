@@ -1,6 +1,6 @@
 nose
 placebo
 boto3
-PyYaml
+pyaml
 mock
 troposphere

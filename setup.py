@@ -1,21 +1,25 @@
 #!/usr/bin/env python
 
 import os
-from custom_install import CustomInstall
-from custom_coverage import CustomCoverage
 from setuptools import setup
+import troposphere
 
 def read(file_name):
     return open(os.path.join(os.path.dirname(__file__), file_name)).read()
 
-install_requires = [
-    read('requirements.txt')
-]
+def get_cmdclass(needs_install):
+    if needs_install:
+        return {}
+    return {'troposphere': CustomInstall, 'coverage': CustomCoverage}
 
-tests_require = [
-    read('tests/requirements.txt')
-]
+install_requires = read('requirements.txt').split()
+tests_require = read('tests/requirements.txt').split()
 
+needs_install = not os.path.isdir('build')
+
+if not needs_install: 
+    from custom_install import CustomInstall
+    from custom_coverage import CustomCoverage
 
 setup(
     name="SIT",
@@ -28,9 +32,9 @@ setup(
     url="https://github.com/dandb/salt-integration-testing",
     packages=['sit'],
     include_package_data=True,
-    cmdclass={'troposphere': CustomInstall, 'coverage': CustomCoverage},
+    cmdclass=get_cmdclass(needs_install),
     install_requires=install_requires,
     tests_require=tests_require,
-    test_suite="tests/*",
+    test_suite="nose.collector",
     long_description=read('README.md') + '\n\n' + read('CHANGES'),
 )

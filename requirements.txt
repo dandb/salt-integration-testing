@@ -1,4 +1,4 @@
 boto3
-PyYaml
+pyaml
 troposphere
 redis
