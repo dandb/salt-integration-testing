@@ -2,7 +2,11 @@
 
 exclude_lines =
     if __name__ == .__main__.:
+    subprocess.call*
 
 omit = 
     custom*
     setup*
+    tests/*
+    .eggs/*
+

@@ -7,28 +7,25 @@ from troposphere.iam import PolicyType, Role, InstanceProfile
 
 from user_data import UserData
 from helpers.sit_helper import SITHelper
-from helpers.sit_template_helper import SITTemplateHelper
 
 
 class SITTemplate(object):
 
-    CONFIGS = SITHelper().get_configs('troposphere')
-    TEMPLATE_DESCRIPTION = CONFIGS["template_description"]
-    INSTANCE_TYPE = CONFIGS["instance_type"]
-    SECURITY_GROUPS = CONFIGS["security_groups"]
-    KEY_NAME = CONFIGS["key_name"]
-    TAG_KEY = CONFIGS["tag_key"]
-    TAG_VALUE = CONFIGS["tag_value"]
-    AMI_ID = CONFIGS['ami_id']
-    MAX_SIZE = CONFIGS['max_size']
-    MIN_SIZE = CONFIGS['min_size']
-    SUBNET = CONFIGS['subnet']
-    CLUSTER_NAME = CONFIGS['cluster_name']
-    AUTOSCALING_GROUP_NAME = CONFIGS['autoscaling_group_name']
-    LAUNCH_CONFIGURATION_NAME = CONFIGS['launch_configuration_name']
-
-    def __init__(self):
-        SITTemplateHelper().validate()
+    def __init__(self, configs_directory='configs'):
+        configs = SITHelper(configs_directory).get_configs('troposphere')
+        self.TEMPLATE_DESCRIPTION = configs["template_description"]
+        self.INSTANCE_TYPE = configs["instance_type"]
+        self.SECURITY_GROUPS = configs["security_groups"]
+        self.KEY_NAME = configs["key_name"]
+        self.TAG_KEY = configs["tag_key"]
+        self.TAG_VALUE = configs["tag_value"]
+        self.AMI_ID = configs['ami_id']
+        self.MAX_SIZE = configs['max_size']
+        self.MIN_SIZE = configs['min_size']
+        self.SUBNET = configs['subnet']
+        self.CLUSTER_NAME = configs['cluster_name']
+        self.AUTOSCALING_GROUP_NAME = configs['autoscaling_group_name']
+        self.LAUNCH_CONFIGURATION_NAME = configs['launch_configuration_name']
         self.template = Template()
         self.init_template()
 

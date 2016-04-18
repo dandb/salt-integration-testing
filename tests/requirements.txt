@@ -4,3 +4,4 @@ boto3
 pyaml
 mock
 troposphere
+fakeredis
