@@ -21,4 +21,4 @@ class LaunchReviewJobTest(unittest.TestCase):
         launch_review = ReviewJob('test', '1', '1.2.3.4', configs_directory='tests/sit/configs', session=self.session)
         launch_review.init_instance()
         launch_review.run()
-
+        launch_review.check_and_print_results()
