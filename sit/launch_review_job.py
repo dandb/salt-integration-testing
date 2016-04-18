@@ -28,7 +28,9 @@ class ReviewJob(object):
     LOGICAL_CLUSTER_NAME = TROPOSPHERE_CONFIGS['cluster_name']
     STACK_NAME = TROPOSPHERE_CONFIGS['stack_name']
     ROLES = SIT_HELPER.get_roles()
-    ATTEMPT_LIMIT = SIT_CONFIGS['attempt_limit'] 
+    ATTEMPT_LIMIT = SIT_CONFIGS['attempt_limit']
+    SAVE_LOGS = SIT_CONFIGS['save_logs']
+    HIGHSTATE_LOG_DIR = SIT_CONFIGS['highstate_log_dir']
 
     def __init__(self, job_name=None, build_number=None, master_ip=None):
         CheckSIT().run()
@@ -185,24 +187,38 @@ class ReviewJob(object):
                 logging.info('printing results for server: {0}'.format(role))
                 parsed_result = json.loads(highstate_result)
                 return_results = parsed_result.pop('return')
+                json_results = json.dumps(parsed_result, indent=4)
                 print yaml.safe_dump(return_results), "\n"
-                print json.dumps(parsed_result, indent=4), "\n"
+                print json_results, "\n"
+                if self.SAVE_LOGS:
+                    self.write_to_log_file(json_results, role)
             except:
                 print highstate_result
             try:
-                if self.highstate_failed(highstate_result):
+                if self.highstate_failed(highstate_result, role):
                     self.is_build_successful = False
             except:
                 self.is_build_successful = False
 
-    def highstate_failed(self, result):
+    def highstate_failed(self, result, role):
         try:
             possible_failures = ['"result": false', 'Data failed to compile:']
             failures = [failure in result for failure in possible_failures]
+            if self.SAVE_LOGS:
+                self.write_to_log_file(json_results, "failure_{0}".format(role))
             return True in failures
         except:
             logging.info('Error finding if there was a failure in the result')
             return True
+
+    def write_to_log_file(self, result, role):
+        try:
+            print "Writing results to logs"
+            log_file = open("{0}/{1}.txt".format(self.HIGHSTATE_LOG_DIR, role))
+            log_file.write(result)
+            log_file.close()
+        except Exception as e:
+            self.error('Failed to write to logs with error: {0}'.format(e))
 
     def fail_build_if_failures_exist(self):
         if not self.is_build_successful:
@@ -212,7 +228,7 @@ class ReviewJob(object):
         try:
             return self.cf_helper.get_resource_name(self.STACK_NAME, self.LOGICAL_CLUSTER_NAME)
         except Exception as e:
-            self.error('Failed to retrieve the cluster')
+            self.error('Failed to retrieve the cluster with error: {0}'.format(e))
 
     def launch_instance(self):
         logging.info('Launching instance')
