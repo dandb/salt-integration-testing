@@ -11,7 +11,7 @@ from helpers.log import Log
 
 class SITTemplateHelper(object):
     
-    def __init__(self, session=None, configs_directory='configs'):
+    def __init__(self, configs_directory='configs', session=None):
         self.configs = SITHelper(configs_directory).get_configs('troposphere')
         self.STACK_NAME = self.configs['stack_name']
         self.KEY_NAME = self.configs['key_name']

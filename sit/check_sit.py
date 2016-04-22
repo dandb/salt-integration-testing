@@ -7,12 +7,11 @@ from helpers.log import Log
 
 class CheckSIT(object):
 
-    SIT_HELPER = SITHelper()
-    ROLES = SIT_HELPER.get_roles()
-    SIT_CONFIGS = SIT_HELPER.get_configs('sit')
-    TROPOSPHERE_CONFIGS = SIT_HELPER.get_configs('troposphere')
-
-    def __init__(self, session=None):
+    def __init__(self, configs_directory='configs', session=None):
+        self.SIT_HELPER = SITHelper(configs_directory)
+        self.ROLES = self.SIT_HELPER.get_roles()
+        self.SIT_CONFIGS = self.SIT_HELPER.get_configs('sit')
+        self.TROPOSPHERE_CONFIGS = self.SIT_HELPER.get_configs('troposphere')
         self.cf_helper = CFHelper(session)
 
     def check_configs_are_set(self):

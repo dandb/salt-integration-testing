@@ -1,0 +1,19 @@
+{
+    "status_code": 200, 
+    "data": {
+        "Activity": {
+        "ActivityId": "string",
+        "AutoScalingGroupName": "string",
+        "Description": "string",
+        "Cause": "string",
+        "StatusCode": "PendingSpotBidPlacement",
+        "StatusMessage": "string",
+        "Progress": 123,
+        "Details": "string"
+    },
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": "b3428b24e-"
+        }
+    }
+}

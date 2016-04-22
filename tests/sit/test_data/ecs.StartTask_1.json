@@ -1,0 +1,55 @@
+{
+    "status_code": 200, 
+    "data": {
+        "tasks": [
+            {
+                "taskArn": "string",
+                "clusterArn": "string",
+                "taskDefinitionArn": "string",
+                "containerInstanceArn": "string",
+                "overrides": {
+                    "containerOverrides": [
+                        {
+                            "name": "string",
+                            "command": [
+                                "string"
+                            ],
+                            "environment": [
+                                {
+                                    "name": "string",
+                                    "value": "string"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "lastStatus": "string",
+                "desiredStatus": "string",
+                "containers": [
+                    {
+                        "containerArn": "string",
+                        "taskArn": "string",
+                        "name": "string",
+                        "lastStatus": "string",
+                        "exitCode": 123,
+                        "reason": "string",
+                        "networkBindings": [
+                            {
+                                "bindIP": "string",
+                                "containerPort": 123,
+                                "hostPort": 123,
+                                "protocol": "tcp"
+                            }
+                        ]
+                    }
+                ],
+                "startedBy": "string",
+                "stoppedReason": "string"
+            }
+        ]
+    },
+    "ResponseMetadata": {
+        "HTTPStatusCode": 200,
+        "RequestId": "1ad3fc-0a877-954fd57"
+    }
+}

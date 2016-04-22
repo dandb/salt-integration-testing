@@ -1,0 +1,54 @@
+{
+    "status_code": 200, 
+    "data": {
+        "Reservations": [
+            {
+                "Instances": [
+                    {
+                        "Monitoring": {
+                            "State": "enabled"
+                        }, 
+                        "PublicDnsName": "", 
+                        "RootDeviceType": "instance-store", 
+                        "State": {
+                            "Code": 16, 
+                            "Name": "running"
+                        }, 
+                        "EbsOptimized": false, 
+                        "LaunchTime": {
+                            "hour": 20,
+                            "__class__": "datetime",
+                            "month": 4,
+                            "second": 17,
+                            "microsecond": 0,
+                            "year": 2016,
+                            "day": 18,
+                            "minute": 30
+                        },
+                        "PublicIpAddress": "2.3.4.5",
+                        "PrivateIpAddress": "1.2.3.4",
+                        "ProductCodes": [], 
+                        "VpcId": "vpc-test",
+                        "StateTransitionReason": "", 
+                        "InstanceId": "i-",
+                        "ImageId": "ami-",
+                        "PrivateDnsName": "", 
+                        "SubnetId": "subnet-test",
+                        "InstanceType": "m1.medium", 
+                        "SourceDestCheck": true,
+                        "Hypervisor": "xen",
+                        "BlockDeviceMappings": [], 
+                        "Architecture": "x86_64", 
+                        "KernelId": "aki-f",
+                        "VirtualizationType": "paravirtual",
+                        "AmiLaunchIndex": 0
+                    }
+                ]
+            }
+        ], 
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": "a03f415d-81f7-f"
+        }
+    }
+}

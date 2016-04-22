@@ -1,0 +1,18 @@
+{
+    "status_code": 200, 
+    "data": {
+        "AutoScalingInstances": [
+            {
+                "InstanceId": "i-46g",
+                "AutoScalingGroupName": "test-asg",
+                "HealthStatus": "HEALTHY",
+                "LifecycleState": "PENDING",
+                "LaunchConfigurationName": "testConfiguration"
+            }
+        ],
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": "-05"
+        }
+    }
+}

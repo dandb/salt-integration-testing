@@ -11,7 +11,7 @@ from sit_template import SITTemplate
 
 class SITLoader(object):
 
-    def __init__(self, session=None, configs_directory='configs'):
+    def __init__(self, configs_directory='configs', session=None):
         troposphere_configs = SITHelper(configs_directory).get_configs('troposphere')
         self.STACK_NAME = troposphere_configs['stack_name']
         self.TAG_VALUE = troposphere_configs['tag_value']

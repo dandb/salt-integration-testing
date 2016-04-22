@@ -11,7 +11,7 @@ class CheckSITTest(unittest.TestCase):
 
     def setUp(self):
         session = Session(region_name='us-west-1')
-        self.check_sit = CheckSIT(session)
+        self.check_sit = CheckSIT(configs_directory='tests/sit/configs', session=session)
 
     def set_values(self, configs_location):
         self.check_sit.SIT_HELPER = SITHelper(configs_directory=configs_location)

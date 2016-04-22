@@ -1,9 +1,9 @@
 import unittest
 from mock import MagicMock
 from boto3.session import Session
+from nose.tools import raises
 
 from infrastructure.sit_loader import SITLoader
-from infrastructure.sit_template import SITTemplate
 from helpers.cf_helper import CFHelper
 
 
@@ -25,4 +25,9 @@ class SITLoaderTest(unittest.TestCase):
 
     def test_successful_run(self):
         self.sit_loader.run()
+
+    @raises(SystemExit)
+    def test_failed_run(self):
+        self.sit_loader.cf_helper.stack_was_created_successfully = MagicMock(return_value=False)
+        self.assertRaises(self.sit_loader.stack_created_successfully(), Exception)
 

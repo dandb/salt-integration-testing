@@ -1,0 +1,99 @@
+{
+    "status_code": 200, 
+    "data": {
+        "failures": [], 
+        "containerInstances": [
+            {
+                "status": "ACTIVE", 
+                "registeredResources": [
+                    {
+                        "integerValue": 16384, 
+                        "longValue": 0, 
+                        "type": "INTEGER", 
+                        "name": "CPU", 
+                        "doubleValue": 0.0
+                    }, 
+                    {
+                        "integerValue": 30147, 
+                        "longValue": 0, 
+                        "type": "INTEGER", 
+                        "name": "MEMORY", 
+                        "doubleValue": 0.0
+                    }, 
+                    {
+                        "name": "PORTS", 
+                        "longValue": 0, 
+                        "doubleValue": 0.0, 
+                        "stringSetValue": [
+                            "22", 
+                            "2376", 
+                            "2375", 
+                            "51678"
+                        ], 
+                        "type": "STRINGSET", 
+                        "integerValue": 0
+                    }, 
+                    {
+                        "name": "PORTS_UDP", 
+                        "longValue": 0, 
+                        "doubleValue": 0.0, 
+                        "stringSetValue": [], 
+                        "type": "STRINGSET", 
+                        "integerValue": 0
+                    }
+                ], 
+                "ec2InstanceId": "i-46g",
+                "agentConnected": true, 
+                "containerInstanceArn": "arn:container-instance",
+                "pendingTasksCount": 0, 
+                "remainingResources": [
+                    {
+                        "integerValue": 16384, 
+                        "longValue": 0, 
+                        "type": "INTEGER", 
+                        "name": "CPU", 
+                        "doubleValue": 0.0
+                    }, 
+                    {
+                        "integerValue": 30147, 
+                        "longValue": 0, 
+                        "type": "INTEGER", 
+                        "name": "MEMORY", 
+                        "doubleValue": 0.0
+                    }, 
+                    {
+                        "name": "PORTS", 
+                        "longValue": 0, 
+                        "doubleValue": 0.0, 
+                        "stringSetValue": [
+                            "22", 
+                            "2376", 
+                            "2375", 
+                            "51678"
+                        ], 
+                        "type": "STRINGSET", 
+                        "integerValue": 0
+                    }, 
+                    {
+                        "name": "PORTS_UDP", 
+                        "longValue": 0, 
+                        "doubleValue": 0.0, 
+                        "stringSetValue": [], 
+                        "type": "STRINGSET", 
+                        "integerValue": 0
+                    }
+                ], 
+                "runningTasksCount": 0, 
+                "versionInfo": {
+                    "agentVersion": "1.8.0", 
+                    "agentHash": "4341b48", 
+                    "dockerVersion": "DockerVersion: 1.9.1"
+                }
+            }
+        ], 
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": "08b8--8339-179fdf99"
+        }
+    }
+}
