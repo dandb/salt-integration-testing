@@ -1,0 +1,12 @@
+{
+    "status_code": 200, 
+    "data": {
+        "containerInstanceArns": [
+            "arn:container-instance"
+        ],
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": "1ad3fc-0a877-954fd57"
+        }
+    }
+}

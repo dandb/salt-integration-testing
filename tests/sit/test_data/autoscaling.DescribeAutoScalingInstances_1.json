@@ -1,0 +1,32 @@
+{
+    "status_code": 200, 
+    "data": {
+        "AutoScalingInstances": [
+            {
+                "InstanceId": "i-121",
+                "AutoScalingGroupName": "test-asg",
+                "HealthStatus": "HEALTHY", 
+                "LifecycleState": "InService", 
+                "LaunchConfigurationName": "testConfiguration"
+            }, 
+            {
+                "InstanceId": "i-134",
+                "AutoScalingGroupName": "test-asg",
+                "HealthStatus": "HEALTHY", 
+                "LifecycleState": "InService", 
+                "LaunchConfigurationName":  "testConfiguration"
+            }, 
+            {
+                "InstanceId": "i-42a",
+                "AutoScalingGroupName": "test-asg",
+                "HealthStatus": "HEALTHY", 
+                "LifecycleState": "InService", 
+                "LaunchConfigurationName": "testConfiguration"
+            }
+        ],
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200,
+            "RequestId": "c3622"
+        }
+    }
+}

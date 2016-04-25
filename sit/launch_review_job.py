@@ -20,32 +20,35 @@ class ReviewJob(object):
     ECS = 'ecs'
     EC2 = 'ec2'
     AUTOSCALING = 'autoscaling'
-    SIT_HELPER = SITHelper()
-    SIT_CONFIGS = SIT_HELPER.get_configs('sit')
-    TROPOSPHERE_CONFIGS = SIT_HELPER.get_configs('troposphere')
-    PROFILE = SIT_CONFIGS['profile_name']
-    LOGICAL_AUTOSCALING_GROUP_NAME = TROPOSPHERE_CONFIGS['autoscaling_group_name']
-    LOGICAL_CLUSTER_NAME = TROPOSPHERE_CONFIGS['cluster_name']
-    STACK_NAME = TROPOSPHERE_CONFIGS['stack_name']
-    ROLES = SIT_HELPER.get_roles()
-    ATTEMPT_LIMIT = SIT_CONFIGS['attempt_limit'] 
 
-    def __init__(self, job_name=None, build_number=None, master_ip=None):
-        CheckSIT().run()
-        self.cf_helper = CFHelper()
+    def __init__(self, job_name=None, build_number=None, master_ip=None, configs_directory='configs', session=None):
+        self.check_sit(configs_directory=configs_directory, session=session)
+        sit_helper = SITHelper(configs_directory)
+        sit_configs = sit_helper.get_configs('sit')
+        troposphere_configs = sit_helper.get_configs('troposphere')
+        self.PROFILE = sit_configs['profile_name']
+        self.LOGICAL_AUTOSCALING_GROUP_NAME = troposphere_configs['autoscaling_group_name']
+        self.LOGICAL_CLUSTER_NAME = troposphere_configs['cluster_name']
+        self.STACK_NAME = troposphere_configs['stack_name']
+        self.ROLES = sit_helper.get_roles()
+        self.ATTEMPT_LIMIT = sit_configs['attempt_limit']
+        self.cf_helper = CFHelper(session=session)
         self.family = self.join_items([job_name, build_number])
         self.master_ip = master_ip
         self.is_build_successful = True
         self.instance_was_launched = False
         self.instance_was_terminated = False
         self.instance = False
-        self.init_boto_clients()
+        self.init_boto_clients(session=session)
         self.cluster = self.get_cluster()
         self.autoscaling_group = self.get_autoscaling_group()
-        self.init_instance()
 
-    def init_boto_clients(self):
-        session = Session(profile_name=self.PROFILE)
+    def check_sit(self, configs_directory, session):
+        CheckSIT(configs_directory=configs_directory, session=session).run()
+
+    def init_boto_clients(self, session=None):
+        if session is None:
+            session = Session(profile_name=self.PROFILE)
         self.ecs_client = self.get_boto_client(session, self.ECS)
         self.autoscaling_client = self.get_boto_client(session, self.AUTOSCALING)
         self.ec2_client = self.get_boto_client(session, self.EC2)
@@ -77,8 +80,6 @@ class ReviewJob(object):
         task_ids = self.start_tasks(tasks)
         self.wait_for_tasks_to_complete(task_ids)
         self.terminate_instance()
-        self.check_and_print_results()
-        self.fail_build_if_failures_exist()
 
     def get_autoscaling_group(self):
         try:
@@ -89,10 +90,10 @@ class ReviewJob(object):
     def wait_for_instance_to_be_active(self, attempt=0):
         if attempt > 30:
             self.error('Instance failed to become in service within 5 minutes.')
-        sleep(10)
         instance = self.get_autoscale_instance()
         if not instance['LifecycleState'] == 'InService':
             logging.info('Waiting 10 seconds for instance to become active')
+            sleep(10)
             return self.wait_for_instance_to_be_active(attempt + 1)
         self.instance_was_launched = True
 
@@ -212,7 +213,7 @@ class ReviewJob(object):
         try:
             return self.cf_helper.get_resource_name(self.STACK_NAME, self.LOGICAL_CLUSTER_NAME)
         except Exception as e:
-            self.error('Failed to retrieve the cluster')
+            self.error('Failed to retrieve the cluster', e)
 
     def launch_instance(self):
         logging.info('Launching instance')
@@ -230,25 +231,24 @@ class ReviewJob(object):
     def get_launched_instance_name(self, current_instances, attempt=0, wait=0):
         if attempt >= 30:
             self.error('instance failed to launch within 5 minutes. You may have a hanging instance')
-        sleep(wait)
         all_instances = self.get_autoscale_instances()
         # Check if new instance has actually launched. Call function recursively until new instance begins provisioning
         new_instance = [instance for instance in all_instances if instance not in current_instances]
         if not new_instance:
             logging.info('No new instance found. Waiting 10 seconds before checking again')
+            sleep(wait)
             return self.get_launched_instance_name(current_instances, attempt + 1, 10)
         logging.info('New instance has launched: {0}'.format(new_instance))
         return new_instance[0]
 
     def get_instance_arn_of_cluster_registered_instance(self, wait=60):
-        logging.info("Waiting {0} seconds before checking if new instance is in the cluster".format(wait))
-        sleep(wait)
         cluster_instances = self.get_cluster_instances()
         cluster_has_instance = self.cluster_has_instance(cluster_instances)
         if cluster_instances and cluster_has_instance:
             logging.info("Instance successfully registered into cluster")
             return cluster_has_instance[0]
-        logging.info("New instance not in cluster yet. Must give it another shot...")
+        logging.info("New instance not in cluster yet. Going to wait: {0}".format(wait))
+        sleep(wait)
         return self.get_instance_arn_of_cluster_registered_instance(30)
 
     def get_current_desired_capacity(self):
@@ -314,7 +314,11 @@ def main():
     build_number = argv[2]
     slave_ip = argv[3]
     review_job = ReviewJob(job, build_number, slave_ip)
+    review_job.init_instance()
     review_job.run()
+    review_job.check_and_print_results()
+    review_job.fail_build_if_failures_exist()
+
 
 if __name__ == '__main__':
     Log.setup()
