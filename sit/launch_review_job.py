@@ -6,6 +6,7 @@ from sys import argv
 import json
 import yaml
 import logging
+import os
 
 from helpers.sit_helper import SITHelper
 from helpers.log import Log
@@ -32,6 +33,8 @@ class ReviewJob(object):
         self.STACK_NAME = troposphere_configs['stack_name']
         self.ROLES = sit_helper.get_roles()
         self.ATTEMPT_LIMIT = sit_configs['attempt_limit']
+        self.SAVE_LOGS = sit_configs['save_logs']
+        self.HIGHSTATE_LOG_DIR = sit_configs['highstate_log_dir']
         self.cf_helper = CFHelper(session=session)
         self.family = self.join_items([job_name, build_number])
         self.master_ip = master_ip
@@ -186,24 +189,43 @@ class ReviewJob(object):
                 logging.info('printing results for server: {0}'.format(role))
                 parsed_result = json.loads(highstate_result)
                 return_results = parsed_result.pop('return')
+                json_results = json.dumps(parsed_result, indent=4)
                 print yaml.safe_dump(return_results), "\n"
-                print json.dumps(parsed_result, indent=4), "\n"
+                print json_results, "\n"
+                if self.SAVE_LOGS:
+                    self.check_for_log_dir()
+                    self.write_to_log_file(json_results, role)
             except:
                 print highstate_result
             try:
-                if self.highstate_failed(highstate_result):
+                if self.highstate_failed(highstate_result, role):
                     self.is_build_successful = False
             except:
                 self.is_build_successful = False
 
-    def highstate_failed(self, result):
+    def highstate_failed(self, result, role):
         try:
             possible_failures = ['"result": false', 'Data failed to compile:']
             failures = [failure in result for failure in possible_failures]
+            if self.SAVE_LOGS:
+                self.check_for_log_dir()
+                self.write_to_log_file(failures, "failure_{0}".format(role))
             return True in failures
         except:
             logging.info('Error finding if there was a failure in the result')
             return True
+
+    def check_for_log_dir(self):
+        if not os.path.exists(self.HIGHSTATE_LOG_DIR):
+            os.makedirs(self.HIGHSTATE_LOG_DIR)
+
+    def write_to_log_file(self, result, role):
+        try:
+            print "Writing results to logs"
+            with open('{0}/{1}.txt'.format(self.HIGHSTATE_LOG_DIR, role), 'a') as log_file:
+                log_file.write(result)
+        except Exception as e:
+            self.error('Failed to write to logs', e)
 
     def fail_build_if_failures_exist(self):
         if not self.is_build_successful:

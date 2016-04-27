@@ -8,3 +8,7 @@ profile_name: 'default'
 container_memory: 512
 container_cpu: 512
 container_image: 'dandb/salt_review:2015-8-7'
+
+# Logfile configs
+save_logs: True
+highstate_log_dir: highstate_logs
