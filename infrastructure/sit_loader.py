@@ -20,7 +20,7 @@ class SITLoader(object):
         self.SECURITY_GROUPS = troposphere_configs['security_groups']
         self.KEY_NAME = troposphere_configs['key_name']
         self.AMI_URL = troposphere_configs['ami_url']
-        self.cf_helper = CFHelper(session)
+        self.cf_helper = CFHelper(configs_directory=configs_directory, session=session)
         self.sit_template = SITTemplate(configs_directory)
         self.template = self.sit_template.template
         self.template_json = self.template.to_json()

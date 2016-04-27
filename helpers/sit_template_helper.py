@@ -19,8 +19,8 @@ class SITTemplateHelper(object):
         self.AMI_URL = self.configs['ami_url']
         self.SECURITY_GROUPS = self.configs['security_groups']
         self.SUBNET = self.configs['subnet']
-        self.cf_helper = CFHelper(session)
-        self.ec2_helper = EC2Helper(session)
+        self.cf_helper = CFHelper(configs_directory=configs_directory, session=session)
+        self.ec2_helper = EC2Helper(configs_directory=configs_directory, session=session)
     
     def validate_stack_exists(self):
         if self.cf_helper.stack_exists(self.STACK_NAME):

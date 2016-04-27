@@ -11,12 +11,12 @@ class SITLoaderTest(unittest.TestCase):
 
     def setUp(self):
         self.session = Session(region_name='us-west-1')
-        configs_directory = 'tests/sit/configs'
-        self.sit_loader = SITLoader(session=self.session, configs_directory=configs_directory)
+        self.configs_directory = 'tests/sit/configs'
+        self.sit_loader = SITLoader(session=self.session, configs_directory=self.configs_directory)
         self.mock_cf_helper_true_responses()
 
     def mock_cf_helper_true_responses(self):
-        cf_helper = CFHelper(self.session)
+        cf_helper = CFHelper(configs_directory=self.configs_directory, session=self.session)
         cf_helper.get_stack_info = MagicMock(return_value=True)
         cf_helper.validate_template = MagicMock(return_value=True)
         cf_helper.create_stack = MagicMock(return_value=True)
