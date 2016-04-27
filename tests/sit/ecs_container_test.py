@@ -8,14 +8,15 @@ from helpers.sit_helper import SITHelper
 class UserDataTest(unittest.TestCase):
     
     def setUp(self):
-        self.container = Container()
+        configs_directory = 'tests/sit/configs'
+        self.container = Container(configs_directory)
         self.container.master_ip = '1.2.3.4'
         self.container.env = 'qa'
         self.container.family = 'test'
         self.container.role = 'unit'
         self.container.MEMORY = 10
-        self.container.SIT_HELPER = SITHelper('tests/sit/configs')
-        self.container.SIT_HELPER.get_states_for_role = MagicMock(return_value=['server', 'php'])
+        self.container.sit_helper = SITHelper(configs_directory)
+        self.container.sit_helper.get_states_for_role = MagicMock(return_value=['server', 'php'])
 
     def test_environment_dictionary(self):
         result = self.container.get_environment_dictionary('test', 'value')

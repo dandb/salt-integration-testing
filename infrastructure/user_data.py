@@ -7,11 +7,12 @@ from helpers.sit_helper import SITHelper
 
 class UserData(object):
 
-    SIT_HELPER = SITHelper()
-    CONFIGS = SIT_HELPER.get_configs('troposphere')
-    LAUNCH_CONFIGURATION_NAME = CONFIGS['launch_configuration_name']
-    AUTOSCALING_GROUP_NAME = CONFIGS['autoscaling_group_name']
-    CUSTOM_USER_DATA = SIT_HELPER.get_custom_user_data()
+    def __init__(self, configs_directory='tests/sit/configs'):
+        sit_helper = SITHelper(configs_directory)
+        CONFIGS = sit_helper.get_configs('troposphere')
+        self.LAUNCH_CONFIGURATION_NAME = CONFIGS['launch_configuration_name']
+        self.AUTOSCALING_GROUP_NAME = CONFIGS['autoscaling_group_name']
+        self.CUSTOM_USER_DATA = sit_helper.get_custom_user_data()
 
     def get_base64_data(self):
         cfn_script = Join('', [

@@ -10,10 +10,10 @@ from mock import MagicMock
 class CheckSITTest(unittest.TestCase):
 
     def setUp(self):
-        session = Session(region_name='us-west-1')
-        self.check_sit = CheckSIT(configs_directory='tests/sit/configs', session=session)
-
+        self.session = Session(region_name='us-west-1')
+        
     def set_values(self, configs_location):
+        self.check_sit = CheckSIT(configs_directory=configs_location, session=self.session)
         self.check_sit.SIT_HELPER = SITHelper(configs_directory=configs_location)
         self.check_sit.ROLES = self.check_sit.SIT_HELPER.get_roles()
         self.check_sit.SIT_CONFIGS = self.check_sit.SIT_HELPER.get_configs('sit')

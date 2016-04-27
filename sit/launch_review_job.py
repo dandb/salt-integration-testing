@@ -22,9 +22,10 @@ class ReviewJob(object):
     EC2 = 'ec2'
     AUTOSCALING = 'autoscaling'
 
-    def __init__(self, job_name=None, build_number=None, master_ip=None, configs_directory='configs', session=None):
+    def __init__(self, job_name=None, build_number=None, master_ip=None, configs_directory=None, session=None):
         self.check_sit(configs_directory=configs_directory, session=session)
         sit_helper = SITHelper(configs_directory)
+        self.configs_directory = configs_directory
         sit_configs = sit_helper.get_configs('sit')
         troposphere_configs = sit_helper.get_configs('troposphere')
         self.PROFILE = sit_configs['profile_name']
@@ -118,7 +119,7 @@ class ReviewJob(object):
             self.error('Failed to register tasks for family: {0}, role: {1}'.format(family, role), e)
 
     def get_container_definitions(self, role, family):
-        container = Container(env='local', role=role, family=family, master_ip=self.master_ip)
+        container = Container(configs_directory=self.configs_directory, env='local', role=role, family=family, master_ip=self.master_ip)
         return container.get_container_definitions()
 
     def start_tasks(self, tasks):
@@ -221,7 +222,7 @@ class ReviewJob(object):
 
     def write_to_log_file(self, result, role):
         try:
-            print "Writing results to logs"
+            logging.info("Writing results to logs")
             with open('{0}/{1}.txt'.format(self.HIGHSTATE_LOG_DIR, role), 'a') as log_file:
                 log_file.write(result)
         except Exception as e:
@@ -335,7 +336,8 @@ def main():
     job = argv[1]
     build_number = argv[2]
     slave_ip = argv[3]
-    review_job = ReviewJob(job, build_number, slave_ip)
+    configs_directory = argv[4]
+    review_job = ReviewJob(job, build_number, slave_ip, configs_directory)
     review_job.init_instance()
     review_job.run()
     review_job.check_and_print_results()
