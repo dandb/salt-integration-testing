@@ -209,7 +209,8 @@ class ReviewJob(object):
             failures = [failure in result for failure in possible_failures]
             if self.SAVE_LOGS:
                 self.check_for_log_dir()
-                self.write_to_log_file(failures, "failure_{0}".format(role))
+                compiled_failures = '\n'.join(failures)
+                self.write_to_log_file(compiled_failures, "failure_{0}".format(role))
             return True in failures
         except:
             logging.info('Error finding if there was a failure in the result')
@@ -221,7 +222,7 @@ class ReviewJob(object):
 
     def write_to_log_file(self, result, role):
         try:
-            print "Writing results to logs"
+            logging.info("Writing results to logs")
             with open('{0}/{1}.txt'.format(self.HIGHSTATE_LOG_DIR, role), 'a') as log_file:
                 log_file.write(result)
         except Exception as e:
