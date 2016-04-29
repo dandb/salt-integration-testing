@@ -190,10 +190,12 @@ class ReviewJob(object):
                 parsed_result = json.loads(highstate_result)
                 return_results = parsed_result.pop('return')
                 json_results = json.dumps(parsed_result, indent=4)
-                print yaml.safe_dump(return_results), "\n"
+                yaml_dump = yaml.safe_dump(return_results)
+                print yaml_dump, "\n"
                 print json_results, "\n"
                 if self.SAVE_LOGS:
                     self.check_for_log_dir()
+                    self.write_to_log_file(yaml_dump, role)
                     self.write_to_log_file(json_results, role)
             except:
                 print highstate_result
@@ -207,10 +209,6 @@ class ReviewJob(object):
         try:
             possible_failures = ['"result": false', 'Data failed to compile:']
             failures = [failure in result for failure in possible_failures]
-            if self.SAVE_LOGS:
-                self.check_for_log_dir()
-                compiled_failures = '\n'.join(failures)
-                self.write_to_log_file(compiled_failures, "failure_{0}".format(role))
             return True in failures
         except:
             logging.info('Error finding if there was a failure in the result')
