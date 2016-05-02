@@ -22,7 +22,7 @@ The following assumptions are made in utilizing this project:
 ## Running SIT
   from root directory of SIT project 
   ```bash
-  python -m sit.launch_review_job <job_name> <build_number> <ci_node_private_ip_address>
+  python -m sit.launch_review_job <job_name> <build_number> <ci_node_private_ip_address> </path/to/configs_directory>
   ```
   * Job name and build number are used to generate a naming convention for the Docker image minion.
   * Private IP is used by the minion to point to its salt-master, the CI node.
@@ -41,7 +41,9 @@ The following assumptions are made in utilizing this project:
   ```
 
   3. Set your configs
-    1. boto3 AWS credentials
+    1. Configuration files can either be stored within the SIT repository, or anywhere else with your file system.
+      We recommend storing the config file in /etc/sit/configs and managing via a salt state.
+    2. boto3 AWS credentials
       Time to set a profile. In this example, we are using “sit” as the profile.
       You may use the default profile if you like
 
@@ -58,7 +60,7 @@ The following assumptions are made in utilizing this project:
         region=<region>
       ```
       If you are using a profile other than default, you will have to change the default inside configs/sit.yml
-    2. configs/troposphere.yml
+    3. /path/to/configs/troposphere.yml
 
       You will need to find the following values and add them:
       * Security group that your CI instances are using
@@ -96,7 +98,7 @@ The following assumptions are made in utilizing this project:
         - target: {{ sitdir }}
         - force: True
         - require:
-        - file: {{ sitdir }}
+          - file: {{ sitdir }}
     ```
  
   6. Configs for SIT
@@ -123,7 +125,7 @@ The following assumptions are made in utilizing this project:
       
     3. configs state:
       ```python
-      {{ sitdir }}/configs:
+      /location/of/where/to/keep/user/generated/sit/configs:
       file.recurse:
         - source: salt://location/of/user/generated/sit/configs
         - template: jinja
@@ -131,8 +133,6 @@ The following assumptions are made in utilizing this project:
         - group: {{ user }}
         - file_mode: '0755'
         - makedirs: True
-        - require:
-          - git: sit
       ```
   7. Now you can highstate your CI node(s) with these configurations
 

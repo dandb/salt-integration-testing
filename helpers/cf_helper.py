@@ -13,7 +13,7 @@ class CFHelper(object):
     FAILED_STATES = ['CREATE_FAILED', 'DELETE_FAILED', 'DELETE_COMPLETE']
     COMPLETE_STATES = ['CREATE_COMPLETE']
 
-    def __init__(self, configs_directory='configs', session=None):
+    def __init__(self, configs_directory=None, session=None):
         if session is None:
             sit_configs = SITHelper(configs_directory).get_configs('sit')
             session = Session(profile_name=sit_configs['profile_name'])

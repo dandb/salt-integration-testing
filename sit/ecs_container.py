@@ -3,13 +3,12 @@ from helpers.sit_helper import SITHelper
 
 class Container(object):
 
-    SIT_HELPER = SITHelper()
-    CONFIGS = SIT_HELPER.get_configs('sit')
-    MEMORY = CONFIGS['container_memory']
-    CPU = CONFIGS['container_cpu']
-    IMAGE = CONFIGS['container_image']
-
-    def __init__(self, family=None, role=None, master_ip=None, env='local'):
+    def __init__(self, configs_directory=None, family=None, role=None, master_ip=None, env='local'):
+        self.sit_helper = SITHelper(configs_directory)
+        sit_configs = self.sit_helper.get_configs('sit')
+        self.MEMORY = sit_configs['container_memory']
+        self.CPU = sit_configs['container_cpu']
+        self.IMAGE = sit_configs['container_image']
         self.family = family
         self.role = role
         self.master_ip = master_ip
@@ -37,4 +36,4 @@ class Container(object):
         return {"name": name, "value": value}
 
     def get_role_states(self, role):
-        return ','.join(self.SIT_HELPER.get_states_for_role(role))
+        return ','.join(self.sit_helper.get_states_for_role(role))

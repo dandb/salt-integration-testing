@@ -5,18 +5,18 @@ import yaml
 
 class SITHelper(object):
 
-    def __init__(self, configs_directory='configs'):
+    def __init__(self, configs_directory=None):
         self.configs_directory = configs_directory
 
     def get_states_for_role(self, role):
-        roles = self.get_configs('roles') 
+        roles = self.get_configs('roles')
         try:
             return roles[role]
         except Exception as e: 
             return 'Failed to find state list for role: {0}. error: {1}'.format(role, e)
 
     def get_roles(self):
-        roles = self.get_configs('roles') 
+        roles = self.get_configs('roles')
         if roles is not None:
             return roles.keys() 
         return False
