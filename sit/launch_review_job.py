@@ -4,9 +4,10 @@ from boto3.session import Session
 from time import sleep
 from sys import argv
 import json
-import yaml
 import logging
 import os
+import re
+import yaml
 
 from helpers.sit_helper import SITHelper
 from helpers.log import Log
@@ -201,19 +202,26 @@ class ReviewJob(object):
             except:
                 print highstate_result
             try:
-                if self.highstate_failed(highstate_result, role):
+                if self.highstate_failed(highstate_result):
                     self.is_build_successful = False
             except:
                 self.is_build_successful = False
 
-    def highstate_failed(self, result, role):
+    def highstate_failed(self, result):
         try:
-            possible_failures = ['"result": false', 'Data failed to compile:']
+            possible_failures = ['"result": false', 'Data failed to compile:', 'Pillar failed to render with the following messages:']
             failures = [failure in result for failure in possible_failures]
-            return True in failures
+            if True not in failures:
+                failures = self.check_regex_failure(failures, result)
+            return True in failures 
         except:
             logging.info('Error finding if there was a failure in the result')
             return True
+
+    def check_regex_failure(self, failures, result):
+        regex_failure = r"Rendering SLS '.*' failed:"
+        failures.append(bool(re.search(regex_failure, result)))
+        return failures
 
     def check_for_log_dir(self):
         if not os.path.exists(self.HIGHSTATE_LOG_DIR):
