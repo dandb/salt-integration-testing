@@ -22,7 +22,7 @@ if not needs_install:
     from custom_coverage import CustomCoverage
 
 setup(
-    name="SIT",
+    name="salt-sit",
     version="0.0.1",
     author="Dun and Bradstreet",
     author_email="sit.dandb@gmail.com",
