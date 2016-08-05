@@ -23,7 +23,7 @@
                         }
                     ]
                 },
-                "lastStatus": "RUNNING",
+                "lastStatus": "STOPPED",
                 "desiredStatus": "string",
                 "containers": [
                     {

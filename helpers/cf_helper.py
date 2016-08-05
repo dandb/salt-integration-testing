@@ -11,7 +11,7 @@ from helpers.log import Log
 class CFHelper(object):
 
     FAILED_STATES = ['CREATE_FAILED', 'DELETE_FAILED', 'DELETE_COMPLETE']
-    COMPLETE_STATES = ['CREATE_COMPLETE']
+    COMPLETE_STATES = ['CREATE_COMPLETE', 'UPDATE_COMPLETE']
 
     def __init__(self, configs_directory=None, session=None):
         if session is None:
@@ -43,13 +43,30 @@ class CFHelper(object):
             )['StackId']
         except Exception as e:
             Log.error('Failed to create stack {0}'.format(stack_name), e)
-            
+
+    def update_stack(self, stack_name, template_body, tag_value):
+        logging.info('Updating stack: {0}'.format(stack_name))
+        try:
+            self.cf_client.update_stack(
+                StackName=stack_name,
+                TemplateBody=template_body,
+                Capabilities=['CAPABILITY_IAM'],
+                Tags=[
+                    {
+                        'Key': 'Name',
+                        'Value': tag_value
+                    }
+                ]
+            )['StackId']
+        except Exception as e:
+            Log.error('Failed to update stack {0}'.format(stack_name), e)
+
     def stack_exists(self, stack_name):
         return self.get_stack_info(stack_name)
 
     def stack_was_created_successfully(self, stack_name, attempt=1, sleep_time=20):
         if attempt > 25:
-            logging.info('Stack was not created in the alotted time')
+            logging.info('Stack was not created/updated in the alotted time')
             return False
         try:
             stack_info = self.get_stack_info(stack_name)
@@ -60,7 +77,7 @@ class CFHelper(object):
                 return False
         except Exception as e:
             logging.info('There was a problem checking status of stack: {0}'.format(e))
-        logging.info('Stack creation still in progress. Waiting {0} seconds'.format(sleep_time))
+        logging.info('Stack creation/update still in progress. Waiting {0} seconds'.format(sleep_time))
         time.sleep(sleep_time)
         return self.stack_was_created_successfully(stack_name, attempt+1)
 

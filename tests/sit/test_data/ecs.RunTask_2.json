@@ -1,6 +1,7 @@
 {
-    "status_code": 200,
+    "status_code": 200, 
     "data": {
+        "failures": [],
         "tasks": [
             {
                 "taskArn": "string",
@@ -23,14 +24,14 @@
                         }
                     ]
                 },
-                "lastStatus": "RUNNING",
+                "lastStatus": "string",
                 "desiredStatus": "string",
                 "containers": [
                     {
                         "containerArn": "string",
                         "taskArn": "string",
                         "name": "string",
-                        "lastStatus": "STOPPED",
+                        "lastStatus": "string",
                         "exitCode": 123,
                         "reason": "string",
                         "networkBindings": [
@@ -45,12 +46,6 @@
                 ],
                 "startedBy": "string",
                 "stoppedReason": "string"
-            }
-        ],
-        "failures": [
-            {
-                "arn": "string",
-                "reason": "string"
             }
         ]
     },

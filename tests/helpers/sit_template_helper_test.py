@@ -27,11 +27,6 @@ class SitHelperTest(unittest.TestCase):
         self.sit_template_helper.validate()
 
     @raises(SystemExit)
-    def test_validate_stack_exists_fails(self):
-        self.sit_template_helper.cf_helper.stack_exists = MagicMock(return_value=True)
-        self.assertRaises(self.sit_template_helper.validate_stack_exists(), Exception)
-
-    @raises(SystemExit)
     def test_validate_configs(self):
         sit_template_helper = self.get_sit_template_helper('empty_configs')
         self.assertRaises(sit_template_helper.validate_configs(), Exception)

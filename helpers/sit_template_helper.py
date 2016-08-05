@@ -3,7 +3,6 @@
 import logging
 import subprocess
 
-from helpers.cf_helper import CFHelper
 from helpers.ec2_helper import EC2Helper
 from helpers.sit_helper import SITHelper
 from helpers.log import Log
@@ -19,12 +18,7 @@ class SITTemplateHelper(object):
         self.AMI_URL = self.configs['ami_url']
         self.SECURITY_GROUPS = self.configs['security_groups']
         self.SUBNET = self.configs['subnet']
-        self.cf_helper = CFHelper(configs_directory=configs_directory, session=session)
         self.ec2_helper = EC2Helper(configs_directory=configs_directory, session=session)
-    
-    def validate_stack_exists(self):
-        if self.cf_helper.stack_exists(self.STACK_NAME):
-            Log.error('The stack "{0}" already exists'.format(self.STACK_NAME))
 
     def validate_configs(self):
         logging.info('Validating configs')
@@ -51,7 +45,6 @@ class SITTemplateHelper(object):
         Log.error('{0} "{1}" not found. Please update configs/troposphere.yml'.format(resource_name, resource))
 
     def validate(self):
-        self.validate_stack_exists()
         self.validate_configs()
         self.validate_aws_resources()
     
