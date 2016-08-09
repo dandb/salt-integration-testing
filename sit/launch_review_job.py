@@ -19,9 +19,12 @@ from sit.check_sit import CheckSIT
 
 class ReviewJob(object):
 
-    ECS = 'ecs'
-    EC2 = 'ec2'
-    AUTOSCALING = 'autoscaling'
+    BOTO_CLIENT_TYPE_ECS = 'ecs'
+    BOTO_CLIENT_TYPE_AUTOSCALING = 'autoscaling'
+    TASK_FAILURE_REASON = 'RESOURCE'
+    CONTAINER_INSTANCE_WAIT = 30
+    CLUSTER_RESOURCE_WAIT = 60
+    TASK_COMPLETION_WAIT = 30
 
     def __init__(self, job_name=None, build_number=None, master_ip=None, configs_directory=None, session=None):
         self.check_sit(configs_directory=configs_directory, session=session)
@@ -43,7 +46,6 @@ class ReviewJob(object):
         self.is_build_successful = True
         self.instance_was_launched = False
         self.instance_was_terminated = False
-        self.instance = False
         self.init_boto_clients(session=session)
         self.cluster = self.get_cluster()
         self.autoscaling_group = self.get_autoscaling_group()
@@ -54,53 +56,38 @@ class ReviewJob(object):
     def init_boto_clients(self, session=None):
         if session is None:
             session = Session(profile_name=self.PROFILE)
-        self.ecs_client = self.get_boto_client(session, self.ECS)
-        self.autoscaling_client = self.get_boto_client(session, self.AUTOSCALING)
-        self.ec2_client = self.get_boto_client(session, self.EC2)
-
-    def init_instance(self):
-        current_instances = self.get_autoscale_instances()
-        self.launch_instance()
-        self.instance = self.get_launched_instance_name(current_instances)
-        self.display_instance_private_ip()
-        self.wait_for_instance_to_be_active()
-        self.instance_arn = self.get_instance_arn_of_cluster_registered_instance()
-
-    def display_instance_private_ip(self):
-        try:
-            instance_data = self.describe_instance([self.instance])
-            private_ip = instance_data['Reservations'][0]['Instances'][0]['PrivateIpAddress']
-            logging.info('{0} private ip: {1}'.format(self.instance, private_ip))
-        except Exception as e:
-            logging.warn('Failed to display instance private ip. Error: {0}'.format(e))
-
-    def describe_instance(self, instance_ids):
-        try:
-            return self.ec2_client.describe_instances(InstanceIds=instance_ids)
-        except Exception as e:
-            logging.warn('Failed to describe instance(s): {0}. Error: {1}'.format(instance_ids, e))
+        self.ecs_client = self.get_boto_client(session, self.BOTO_CLIENT_TYPE_ECS)
+        self.autoscaling_client = self.get_boto_client(session, self.BOTO_CLIENT_TYPE_AUTOSCALING)
 
     def run(self):
+        self.prepare_cluster()
         tasks = self.register_tasks()
         task_ids = self.start_tasks(tasks)
         self.wait_for_tasks_to_complete(task_ids)
-        self.terminate_instance()
+
+    def prepare_cluster(self):
+        capacity = self.get_current_desired_capacity()
+        logging.info('Current SIT Cluster capacity: {0}'.format(capacity))
+        if capacity == 0:
+            logging.info('Cluster is currently empty. Launching the first instance.')
+            self.set_current_desired_capacity(1)
+        self.wait_for_first_instance()
+
+    def wait_for_first_instance(self, attempt=1):
+        if attempt > 10:
+            self.error('Timed out waiting for instance to become available in sit cluster.')
+        cluster_instances = self.ecs_client.list_container_instances(cluster=self.cluster)['containerInstanceArns']
+        logging.info('Sit Cluster Instances: {0}'.format(cluster_instances))
+        if not cluster_instances:
+            logging.info('First instance not in cluster yet. Waiting for {0} seconds...'.format(self.CONTAINER_INSTANCE_WAIT))
+            sleep(self.CONTAINER_INSTANCE_WAIT)
+            self.wait_for_first_instance(attempt+1)
 
     def get_autoscaling_group(self):
         try:
             return self.cf_helper.get_resource_name(self.STACK_NAME, self.LOGICAL_AUTOSCALING_GROUP_NAME)
         except Exception as e:
             self.error('Unable to get the Autoscaling Group name', e)
-
-    def wait_for_instance_to_be_active(self, attempt=0):
-        if attempt > 30:
-            self.error('Instance failed to become in service within 5 minutes.')
-        instance = self.get_autoscale_instance()
-        if not instance['LifecycleState'] == 'InService':
-            logging.info('Waiting 10 seconds for instance to become active')
-            sleep(10)
-            return self.wait_for_instance_to_be_active(attempt + 1)
-        self.instance_was_launched = True
 
     def register_tasks(self):
         tasks = []
@@ -124,19 +111,29 @@ class ReviewJob(object):
         return container.get_container_definitions()
 
     def start_tasks(self, tasks):
-        logging.info('Starting tasks')
+        logging.info('Starting tasks: {0}'.format(tasks))
         try:
             task_ids = []
             for task in tasks:
-                response = self.ecs_client.start_task(
-                    cluster=self.cluster,
-                    taskDefinition=task,
-                    containerInstances=[self.instance_arn]
-                )
+                response = self.attempt_start_task(task)
                 task_ids.append(response['tasks'][0]['taskArn'])
             return task_ids
         except Exception as e:
             self.error('Failed to run tasks', e)
+
+    def attempt_start_task(self, task, attempt=1):
+        if attempt > 10:
+            self.error('Task {0} could not start. Timed out waiting for resources.'.format(task))
+        response = self.ecs_client.run_task(
+            cluster=self.cluster,
+            taskDefinition=task
+        )
+        if response['failures'] and self.TASK_FAILURE_REASON in response['failures'][0]['reason']:
+            logging.info('Task: {0} failed to start due to unavailable Resources. Waiting 60 seconds.'
+                         .format(task))
+            sleep(self.CLUSTER_RESOURCE_WAIT)
+            response = self.attempt_start_task(task, attempt+1)
+        return response
 
     def wait_for_tasks_to_complete(self, task_ids, attempt=0):
         if attempt > self.ATTEMPT_LIMIT:
@@ -145,8 +142,8 @@ class ReviewJob(object):
         try:
             status = filter(lambda task: task['lastStatus'] != "STOPPED", task_responses)
             if status:
-                logging.info("Tasks are still running. Waiting for 30 seconds")
-                sleep(30)
+                logging.info('Tasks are still running. Waiting for {0} seconds'.format(self.TASK_COMPLETION_WAIT))
+                sleep(self.TASK_COMPLETION_WAIT)
                 return self.wait_for_tasks_to_complete(task_ids, attempt + 1)
         except Exception as e:
             self.error('Failed determining status of task', e)
@@ -157,30 +154,6 @@ class ReviewJob(object):
             return self.ecs_client.describe_tasks(cluster=self.cluster, tasks=task_ids)['tasks']
         except Exception as e:
             self.error('Failed to retrieve tasks from cluster.', e)
-
-    def terminate_instance(self):
-        if not self.instance_was_terminated:
-            try:
-                logging.info('Terminating instance: {0}'.format(self.instance))
-                self.autoscaling_client.terminate_instance_in_auto_scaling_group(
-                    InstanceId=self.instance,
-                    ShouldDecrementDesiredCapacity=True
-                )
-                logging.info('Terminated instance: {0}'.format(self.instance))
-                self.instance_was_terminated = True
-            except Exception as e:
-                logging.info('Failed to terminate the instance: {0}. Decreasing desired instances. {1}'.format(self.instance, e))
-                self.decrease_instance_count()
-        else:
-            logging.info('Instance was terminated: {0}'.format(self.instance))
-
-    def decrease_instance_count(self):
-        try:
-            current_count = self.get_current_desired_capacity()
-            self.set_current_desired_capacity(current_count - 1)
-            self.instance_was_terminated = True
-        except Exception as e:
-            self.error('Failed to decrease desired instance count', e)
 
     def check_and_print_results(self):
         redis_client = RedisClient()
@@ -193,14 +166,12 @@ class ReviewJob(object):
                 return_results = parsed_result.pop('return')
                 json_results = json.dumps(parsed_result, indent=4)
                 yaml_dump = yaml.safe_dump(return_results)
-                print yaml_dump, "\n"
-                print json_results, "\n"
                 if self.SAVE_LOGS:
                     self.check_for_log_dir()
                     self.write_to_log_file(yaml_dump, role)
                     self.write_to_log_file(json_results, role)
-            except:
-                print highstate_result
+            except Exception as e:
+                logging.info('Result:{0} Exception:{1}'.format(highstate_result, e))
             try:
                 if self.highstate_failed(highstate_result):
                     self.is_build_successful = False
@@ -245,10 +216,6 @@ class ReviewJob(object):
         except Exception as e:
             self.error('Failed to retrieve the cluster', e)
 
-    def launch_instance(self):
-        logging.info('Launching instance')
-        self.set_current_desired_capacity(self.get_current_desired_capacity() + 1)
-
     def set_current_desired_capacity(self, capacity=None):
         try:
             return self.autoscaling_client.set_desired_capacity(
@@ -258,29 +225,6 @@ class ReviewJob(object):
         except Exception as e:
             self.error('Failed to increase the desired capacity for Autoscaling Group: {0}'.format(self.autoscaling_group), e)
 
-    def get_launched_instance_name(self, current_instances, attempt=0, wait=0):
-        if attempt >= 30:
-            self.error('instance failed to launch within 5 minutes. You may have a hanging instance')
-        all_instances = self.get_autoscale_instances()
-        # Check if new instance has actually launched. Call function recursively until new instance begins provisioning
-        new_instance = [instance for instance in all_instances if instance not in current_instances]
-        if not new_instance:
-            logging.info('No new instance found. Waiting 10 seconds before checking again')
-            sleep(wait)
-            return self.get_launched_instance_name(current_instances, attempt + 1, 10)
-        logging.info('New instance has launched: {0}'.format(new_instance))
-        return new_instance[0]
-
-    def get_instance_arn_of_cluster_registered_instance(self, wait=60):
-        cluster_instances = self.get_cluster_instances()
-        cluster_has_instance = self.cluster_has_instance(cluster_instances)
-        if cluster_instances and cluster_has_instance:
-            logging.info("Instance successfully registered into cluster")
-            return cluster_has_instance[0]
-        logging.info("New instance not in cluster yet. Going to wait: {0}".format(wait))
-        sleep(wait)
-        return self.get_instance_arn_of_cluster_registered_instance(30)
-
     def get_current_desired_capacity(self):
         try:
             return self.autoscaling_client.describe_auto_scaling_groups(
@@ -288,37 +232,6 @@ class ReviewJob(object):
             )['AutoScalingGroups'][0]['DesiredCapacity']
         except Exception as e:
             self.error('Failed to retrieve the desired capacity for Austoscaling Group: {0}.'.format(self.autoscaling_group), e)
-
-    def get_autoscale_instance(self):
-        try:
-            return self.autoscaling_client.describe_auto_scaling_instances(InstanceIds=[self.instance])['AutoScalingInstances'][0]
-        except Exception as e:
-            self.error('Failed to get list of all autoscale instances', e)
-
-    def get_autoscale_instances(self):
-        try:
-            instances = self.autoscaling_client.describe_auto_scaling_instances()['AutoScalingInstances']
-            return [instance['InstanceId'] for instance in instances if instance['AutoScalingGroupName'] == self.autoscaling_group and instance['LifecycleState'] != 'Terminating']
-        except Exception as e:
-            self.error('Failed to get list of all autoscale instances', e)
-
-    def get_cluster_instances(self):
-        try:
-            return self.ecs_client.list_container_instances(cluster=self.cluster)['containerInstanceArns']
-        except Exception as e:
-            self.error('Failed to retrieve all instances within cluster: {0}'.format(self.cluster), e)
-
-    def cluster_has_instance(self, all_instances):
-        try:
-            if not all_instances:
-                return False
-            cluster_instances = self.ecs_client.describe_container_instances(
-                cluster=self.cluster,
-                containerInstances=all_instances
-            )['containerInstances']
-            return [instance['containerInstanceArn'] for instance in cluster_instances if instance['ec2InstanceId'] == self.instance]
-        except Exception as e:
-            self.error('Failed to determine if instance is registered to cluster: {0}'.format(self.cluster), e)
 
     def get_boto_client(self, session, client_name):
         try:
@@ -334,8 +247,6 @@ class ReviewJob(object):
 
     def error(self, message, e=None, error_code=2):
         logging.info('{0}. Exception: {1}'.format(message, e))
-        if self.instance_was_launched:
-            self.terminate_instance()
         exit(error_code)
 
 
@@ -345,7 +256,6 @@ def main():
     slave_ip = argv[3]
     configs_directory = argv[4]
     review_job = ReviewJob(job, build_number, slave_ip, configs_directory)
-    review_job.init_instance()
     review_job.run()
     review_job.check_and_print_results()
     review_job.fail_build_if_failures_exist()

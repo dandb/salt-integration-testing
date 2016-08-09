@@ -1,0 +1,10 @@
+{
+    "status_code": 200, 
+    "data": {
+        "StackId": "arn:aws:cloudformation:us-west-1:12345:stack/sit-tool-test/stack-id",
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": "12345-request-id"
+        }
+    }
+}

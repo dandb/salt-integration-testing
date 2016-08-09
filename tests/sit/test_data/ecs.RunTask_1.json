@@ -1,6 +1,7 @@
 {
     "status_code": 200, 
     "data": {
+        "failures": [{"reason": "RESOURCE:CPU"}],
         "tasks": [
             {
                 "taskArn": "string",

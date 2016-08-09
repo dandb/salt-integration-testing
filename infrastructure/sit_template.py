@@ -2,8 +2,9 @@
 
 from troposphere import Template, Ref, Join, autoscaling, cloudformation
 from troposphere.ecs import Cluster
-from troposphere.autoscaling import AutoScalingGroup, LaunchConfiguration 
-from troposphere.iam import PolicyType, Role, InstanceProfile  
+from troposphere.autoscaling import AutoScalingGroup, LaunchConfiguration, ScalingPolicy
+from troposphere.iam import PolicyType, Role, InstanceProfile
+from troposphere.cloudwatch import Alarm, MetricDimension
 
 from user_data import UserData
 from helpers.sit_helper import SITHelper
@@ -26,7 +27,11 @@ class SITTemplate(object):
         self.CLUSTER_NAME = configs['cluster_name']
         self.AUTOSCALING_GROUP_NAME = configs['autoscaling_group_name']
         self.LAUNCH_CONFIGURATION_NAME = configs['launch_configuration_name']
+        self.SCALING_METRIC = configs['scaling_metric']
+        self.SCALE_UP_THRESHOLD = configs['scale_up_threshold']
+        self.SCALE_DOWN_THRESHOLD = configs['scale_down_threshold']
         self.template = Template()
+        self.user_data = UserData(configs_directory)
         self.init_template()
 
     def print_template(self):
@@ -75,8 +80,15 @@ class SITTemplate(object):
                             "ecs:DeregisterContainerInstance",
                             "ecs:DiscoverPollEndpoint",
                             "ecs:Submit*",
-                            "ecs:Poll"
-                        ],  
+                            "ecs:Poll",
+                            "ecs:StartTelemetrySession",
+                            "ecr:GetAuthorizationToken",
+                            "ecr:BatchCheckLayerAvailability",
+                            "ecr:GetDownloadUrlForLayer",
+                            "ecr:BatchGetImage",
+                            "logs:CreateLogStream",
+                            "logs:PutLogEvents"
+                        ],
                         "Resource": "*" 
                     }],
                 }
@@ -132,7 +144,7 @@ class SITTemplate(object):
                 ImageId=self.AMI_ID,
                 IamInstanceProfile=Ref(ecs_instance_profile),
                 InstanceType=self.INSTANCE_TYPE,
-                UserData=UserData().get_base64_data(),
+                UserData=self.user_data.get_base64_data(),
                 AssociatePublicIpAddress=True,
                 SecurityGroups=self.SECURITY_GROUPS,
                 KeyName=self.KEY_NAME,
@@ -156,7 +168,64 @@ class SITTemplate(object):
                 VPCZoneIdentifier=[self.SUBNET]
             )
         )
-        
+
+        """ Scale UP Policy """
+        scaling_up_policy = self.template.add_resource(ScalingPolicy(
+            '{0}ScaleUpPolicy'.format(self.AUTOSCALING_GROUP_NAME),
+            AdjustmentType='ChangeInCapacity',
+            AutoScalingGroupName=Ref(auto_scaling_group),
+            Cooldown=60,
+            ScalingAdjustment='1'
+        ))
+
+        """ Cloud Watch Alarm """
+        self.template.add_resource(Alarm(
+            '{0}ScaleUpAlarm'.format(self.AUTOSCALING_GROUP_NAME),
+            ActionsEnabled=True,
+            Namespace='AWS/ECS',
+            MetricName=self.SCALING_METRIC,
+            ComparisonOperator='GreaterThanOrEqualToThreshold',
+            Threshold=self.SCALE_UP_THRESHOLD,
+            EvaluationPeriods=1,
+            Statistic='Average',
+            Period=60,
+            AlarmActions=[Ref(scaling_up_policy)],
+            Dimensions=[
+                MetricDimension(
+                    Name='ClusterName',
+                    Value=Ref(ecs_cluster)
+                )
+            ]
+        ))
+
+        """ Scale DOWN Policy """
+        scaling_down_policy = self.template.add_resource(ScalingPolicy(
+            '{0}ScaleDownPolicy'.format(self.AUTOSCALING_GROUP_NAME),
+            AdjustmentType='ChangeInCapacity',
+            AutoScalingGroupName=Ref(auto_scaling_group),
+            Cooldown=60,
+            ScalingAdjustment='-1'
+        ))
+
+        """ Cloud Watch Alarm """
+        self.template.add_resource(Alarm(
+            '{0}ScaleDownAlarm'.format(self.AUTOSCALING_GROUP_NAME),
+            ActionsEnabled=True,
+            Namespace='AWS/ECS',
+            MetricName=self.SCALING_METRIC,
+            ComparisonOperator='LessThanOrEqualToThreshold',
+            Threshold=self.SCALE_DOWN_THRESHOLD,
+            EvaluationPeriods=1,
+            Statistic='Average',
+            Period=300,
+            AlarmActions=[Ref(scaling_down_policy)],
+            Dimensions=[
+                MetricDimension(
+                    Name='ClusterName',
+                    Value=Ref(ecs_cluster)
+                )
+            ]
+        ))
 
 if __name__ == '__main__':
     SITTemplate().print_template()

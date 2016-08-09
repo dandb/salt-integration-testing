@@ -5,8 +5,8 @@ attempt_limit: 80
 profile_name: 'default'
 
 # Docker container configs
-container_memory: 512
-container_cpu: 512
+container_memory: 1024
+container_cpu: 1024
 container_image: 'dandb/salt_review:2015-8-7'
 
 # Logfile configs

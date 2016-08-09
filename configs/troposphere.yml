@@ -25,6 +25,9 @@ autoscaling_group_name: 'sitAutoScalingGroup'
 subnet:
 max_size: 20
 min_size: 0
+scaling_metric: 'CPUReservation'
+scale_up_threshold: '70'
+scale_down_threshold: '20'
 
 ## General configs
 tag_key: 'Name'

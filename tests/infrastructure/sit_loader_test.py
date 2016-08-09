@@ -17,8 +17,9 @@ class SITLoaderTest(unittest.TestCase):
 
     def mock_cf_helper_true_responses(self):
         cf_helper = CFHelper(configs_directory=self.configs_directory, session=self.session)
-        cf_helper.get_stack_info = MagicMock(return_value=True)
+        cf_helper.get_stack_info = MagicMock(return_value=False)
         cf_helper.validate_template = MagicMock(return_value=True)
+        cf_helper.create_or_update_stack = MagicMock(return_value=True)
         cf_helper.create_stack = MagicMock(return_value=True)
         cf_helper.stack_was_created_successfully = MagicMock(return_value=True)
         self.sit_loader.cf_helper = cf_helper

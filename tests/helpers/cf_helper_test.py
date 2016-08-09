@@ -28,13 +28,25 @@ class CFHelperTest(unittest.TestCase):
         negative_result = self.cf_helper_placebo.validate_template(template_body)
         self.assertEquals(negative_result, None)
 
-    @raises(SystemExit)
-    def test_create_stack(self):
+    def test_create_stack_success(self):
         positive_result = self.cf_helper_placebo.create_stack(self.sit_loader_placebo.STACK_NAME, self.sit_loader_placebo.template_json, self.sit_loader_placebo.TAG_VALUE)
         self.assertEquals(positive_result, None)
 
-        #this call will raise the SystemExit because the stack has already been created
+    def test_update_stack_success(self):
+        positive_result = self.cf_helper_placebo.update_stack(self.sit_loader_placebo.STACK_NAME, self.sit_loader_placebo.template_json, self.sit_loader_placebo.TAG_VALUE)
+        self.assertEquals(positive_result, None)
+
+    @raises(SystemExit)
+    def test_create_stack_failure(self):
+        positive_result = self.cf_helper_placebo.create_stack(self.sit_loader_placebo.STACK_NAME, self.sit_loader_placebo.template_json, self.sit_loader_placebo.TAG_VALUE)
+        self.assertEquals(positive_result, None)
         self.cf_helper_placebo.create_stack(self.sit_loader_placebo.STACK_NAME, self.sit_loader_placebo.template_json, self.sit_loader_placebo.TAG_VALUE)
+
+    @raises(SystemExit)
+    def test_update_stack_failure(self):
+        positive_result = self.cf_helper_placebo.update_stack(self.sit_loader_placebo.STACK_NAME, self.sit_loader_placebo.template_json, self.sit_loader_placebo.TAG_VALUE)
+        self.assertEquals(positive_result, None)
+        self.cf_helper_placebo.update_stack(self.sit_loader_placebo.STACK_NAME, self.sit_loader_placebo.template_json, self.sit_loader_placebo.TAG_VALUE)
 
     def test_stack_was_created_successfully(self):
         attempts = 25  # set attempts to the max so that it only tries once

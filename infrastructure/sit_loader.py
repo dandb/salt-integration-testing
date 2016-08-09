@@ -28,8 +28,11 @@ class SITLoader(object):
     def validate_template(self):
         self.cf_helper.validate_template(self.template_json)
 
-    def create_stack(self):
-        self.cf_helper.create_stack(self.STACK_NAME, self.template_json, self.TAG_VALUE)
+    def create_or_update_stack(self):
+        if self.cf_helper.stack_exists(self.STACK_NAME):
+            self.cf_helper.update_stack(self.STACK_NAME, self.template_json, self.TAG_VALUE)
+        else:
+            self.cf_helper.create_stack(self.STACK_NAME, self.template_json, self.TAG_VALUE)
 
     def stack_created_successfully(self):
         if not self.cf_helper.stack_was_created_successfully(self.STACK_NAME):
@@ -38,7 +41,7 @@ class SITLoader(object):
     def run(self):
         start = time()
         self.validate_template()
-        self.create_stack()
+        self.create_or_update_stack()
         self.stack_created_successfully()
         end = time()
         logging.info('Your stack is up and ready to go!')
