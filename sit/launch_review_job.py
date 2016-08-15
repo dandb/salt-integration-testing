@@ -166,6 +166,7 @@ class ReviewJob(object):
                 return_results = parsed_result.pop('return')
                 json_results = json.dumps(parsed_result, indent=4)
                 yaml_dump = yaml.safe_dump(return_results)
+                logging.info('{0}\n{1}\n'.format(yaml_dump, json_results))
                 if self.SAVE_LOGS:
                     self.check_for_log_dir()
                     self.write_to_log_file(yaml_dump, role)
