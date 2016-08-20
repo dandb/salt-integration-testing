@@ -28,6 +28,7 @@ min_size: 0
 scaling_metric: 'CPUReservation'
 scale_up_threshold: '70'
 scale_down_threshold: '20'
+ecs_task_cleanup_wait_duration: '20m'
 
 ## General configs
 tag_key: 'Name'

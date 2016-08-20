@@ -30,6 +30,7 @@ class SITTemplate(object):
         self.SCALING_METRIC = configs['scaling_metric']
         self.SCALE_UP_THRESHOLD = configs['scale_up_threshold']
         self.SCALE_DOWN_THRESHOLD = configs['scale_down_threshold']
+        self.ECS_TASK_CLEANUP_WAIT = configs['ecs_task_cleanup_wait_duration']
         self.template = Template()
         self.user_data = UserData(configs_directory)
         self.init_template()
@@ -97,9 +98,11 @@ class SITTemplate(object):
 
         commands = {
             '01_add_instance_to_cluster': {
-                'command': Join('', ['#!/bin/bash\n', 'echo ECS_CLUSTER=', Ref(ecs_cluster), ' >> /etc/ecs/ecs.config'])
-            }   
-        }    
+                'command': Join('', ['#!/bin/bash\n', 'echo ECS_CLUSTER=', Ref(ecs_cluster),
+                                     '$"\n"ECS_ENGINE_TASK_CLEANUP_WAIT_DURATION=', self.ECS_TASK_CLEANUP_WAIT,
+                                     ' >> /etc/ecs/ecs.config'])
+            }
+        }
 
         files = {
             "/etc/cfn/cfn-hup.conf": {
