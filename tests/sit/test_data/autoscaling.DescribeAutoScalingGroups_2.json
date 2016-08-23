@@ -1,0 +1,56 @@
+
+{
+    "status_code": 200,
+    "data": {
+        "AutoScalingGroups": [
+            {
+                "AutoScalingGroupARN": "arn:aws:autoscaling",
+                "HealthCheckGracePeriod": 0,
+                "SuspendedProcesses": [],
+                "DesiredCapacity": 2,
+                "EnabledMetrics": [],
+                "LoadBalancerNames": [],
+                "AutoScalingGroupName": "test-asg",
+                "DefaultCooldown": 300,
+                "MinSize": 0,
+                "Instances": [
+                    {
+                        "InstanceId": "i-87ac3d44",
+                        "AvailabilityZone": "us-west-1a",
+                        "HealthStatus": "Healthy",
+                        "LifecycleState": "InService",
+                        "LaunchConfigurationName": "sit-tool-sitLaunchConfiguration-1W5MQIFDSZBU7"
+                    },
+                    {
+                        "InstanceId": "i-a10f9c62",
+                        "AvailabilityZone": "us-west-1a",
+                        "HealthStatus": "Healthy",
+                        "LifecycleState": "InService",
+                        "LaunchConfigurationName": "sit-tool-sitLaunchConfiguration-1W5MQIFDSZBU7"
+                    }
+                ],
+                "MaxSize": 20,
+                "VPCZoneIdentifier": "subnet-test",
+                "TerminationPolicies": [
+                    "Default"
+                ],
+                "LaunchConfigurationName": "sit-tool-sitLaunchConfiguration",
+                "CreatedTime": {
+                    "hour": 20,
+                    "__class__": "datetime",
+                    "month": 3,
+                    "second": 30,
+                    "microsecond": 441000,
+                    "year": 2016,
+                    "day": 28,
+                    "minute": 39
+                },
+                "HealthCheckType": "EC2"
+            }
+        ],
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": "57b8d900-05b5-11e6-a25b-3101b4af54f3"
+        }
+    }
+}

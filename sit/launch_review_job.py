@@ -20,6 +20,7 @@ from sit.check_sit import CheckSIT
 class ReviewJob(object):
 
     BOTO_CLIENT_TYPE_ECS = 'ecs'
+    BOTO_CLIENT_TYPE_EC2 = 'ec2'
     BOTO_CLIENT_TYPE_AUTOSCALING = 'autoscaling'
     TASK_FAILURE_REASON = 'RESOURCE'
     CONTAINER_INSTANCE_WAIT = 30
@@ -58,6 +59,7 @@ class ReviewJob(object):
             session = Session(profile_name=self.PROFILE)
         self.ecs_client = self.get_boto_client(session, self.BOTO_CLIENT_TYPE_ECS)
         self.autoscaling_client = self.get_boto_client(session, self.BOTO_CLIENT_TYPE_AUTOSCALING)
+        self.ec2_client = self.get_boto_client(session, self.BOTO_CLIENT_TYPE_EC2)
 
     def run(self):
         self.prepare_cluster()
@@ -77,11 +79,31 @@ class ReviewJob(object):
         if attempt > 10:
             self.error('Timed out waiting for instance to become available in sit cluster.')
         cluster_instances = self.ecs_client.list_container_instances(cluster=self.cluster)['containerInstanceArns']
-        logging.info('Sit Cluster Instances: {0}'.format(cluster_instances))
         if not cluster_instances:
             logging.info('First instance not in cluster yet. Waiting for {0} seconds...'.format(self.CONTAINER_INSTANCE_WAIT))
             sleep(self.CONTAINER_INSTANCE_WAIT)
             self.wait_for_first_instance(attempt+1)
+        else:
+            self.display_instances_details(cluster_instances)
+
+    def display_instances_details(self, cluster_instances):
+        try:
+            cluster_container_ids = map(lambda arn: arn.split('/')[1], cluster_instances)
+            cluster_instance_details = self.ecs_client.describe_container_instances(
+                containerInstances=cluster_container_ids, cluster=self.cluster)['containerInstances']
+            cluster_instance_ids = map(lambda x: x['ec2InstanceId'], cluster_instance_details)
+            logging.info('SIT Cluster Instance Ids: {0}'.format(cluster_instance_ids))
+            self.display_instances_private_ips(cluster_instance_ids)
+        except Exception as e:
+            logging.warn('Failed to display instance private ip. Error: {0}'.format(e))
+
+    def display_instances_private_ips(self, instance_ids):
+        try:
+            instance_reservations = self.ec2_client.describe_instances(InstanceIds=instance_ids)['Reservations']
+            ips = map(lambda reservation: reservation['Instances'][0]['PrivateIpAddress'], instance_reservations)
+            logging.info('SIT Cluster Instance IPs: {0}'.format(ips))
+        except Exception as e:
+            logging.warn('Failed to describe instance(s): {0}. Error: {1}'.format(instance_ids, e))
 
     def get_autoscaling_group(self):
         try:
