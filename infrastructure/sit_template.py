@@ -21,6 +21,8 @@ class SITTemplate(object):
         self.TAG_KEY = configs["tag_key"]
         self.TAG_VALUE = configs["tag_value"]
         self.AMI_ID = configs['ami_id']
+        self.EBS_VOLUME_SIZE = configs['ebs_volume_size']
+        self.EBS_DEVICE_NAME = configs['ebs_device_name']
         self.MAX_SIZE = configs['max_size']
         self.MIN_SIZE = configs['min_size']
         self.SUBNET = configs['subnet']
@@ -159,7 +161,14 @@ class SITTemplate(object):
                             services=services
                         )
                     })
-                )
+                ),
+                BlockDeviceMappings=[autoscaling.BlockDeviceMapping(
+                    DeviceName=self.EBS_DEVICE_NAME,
+                    Ebs=autoscaling.EBSBlockDevice(
+                        DeleteOnTermination=True,
+                        VolumeSize=self.EBS_VOLUME_SIZE
+                    )
+                )]
             )
         )
 
