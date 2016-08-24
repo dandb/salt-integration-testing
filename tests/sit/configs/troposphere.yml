@@ -13,6 +13,8 @@ instance_type: 'c3.4xlarge'
 # array of security group IDs. Example is shown
 security_groups:
   - 'sg-78shdjs'
+ebs_device_name: '/dev/xvdcz'
+ebs_volume_size: 60
 
 key_name: fake-key
 # AMI ID of amazon-ecs-optimized e.g. 'ami-33679c77'
