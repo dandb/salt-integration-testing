@@ -148,7 +148,7 @@ class SITTemplate(object):
                 IamInstanceProfile=Ref(ecs_instance_profile),
                 InstanceType=self.INSTANCE_TYPE,
                 UserData=self.user_data.get_base64_data(),
-                AssociatePublicIpAddress=True,
+                AssociatePublicIpAddress=False,
                 SecurityGroups=self.SECURITY_GROUPS,
                 KeyName=self.KEY_NAME,
                 Metadata=autoscaling.Metadata(
