@@ -166,7 +166,8 @@ class SITTemplate(object):
                     DeviceName=self.EBS_DEVICE_NAME,
                     Ebs=autoscaling.EBSBlockDevice(
                         DeleteOnTermination=True,
-                        VolumeSize=self.EBS_VOLUME_SIZE
+                        VolumeSize=self.EBS_VOLUME_SIZE,
+                        VolumeType='gp2'
                     )
                 )]
             )

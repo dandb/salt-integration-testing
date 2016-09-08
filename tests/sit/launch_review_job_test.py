@@ -56,3 +56,16 @@ class LaunchReviewJobTest(unittest.TestCase):
         self.assertEquals(launch_review.highstate_failed(result), True)
         result_false = "foo bar"
         self.assertEquals(launch_review.highstate_failed(result_false), False)
+
+    @patch.object(ReviewJob, 'check_sit', return_value=None)
+    @patch.object(ReviewJob, 'get_cluster', return_value='test-cluster')
+    @patch.object(ReviewJob, 'get_autoscaling_group', return_value='test-asg')
+    def test_wait_for_tasks_to_complete_timeout(self, *args):
+        launch_review = ReviewJob('test', '1', '1.2.3.4', configs_directory='tests/sit/configs', session=self.session)
+        launch_review.cluster = 'sit-tool-test-sitClusterTest'
+        launch_review.running_task_ids = ['arn:aws:ecs:us-west-1:123:task/123456']
+        launch_review.ATTEMPT_LIMIT = 4
+        try:
+            launch_review.wait_for_tasks_to_complete(attempt=5)
+        except SystemExit as se:
+            self.assertEquals(se.code, 2)

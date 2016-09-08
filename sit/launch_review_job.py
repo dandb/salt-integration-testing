@@ -26,6 +26,7 @@ class ReviewJob(object):
     CONTAINER_INSTANCE_WAIT = 30
     CLUSTER_RESOURCE_WAIT = 60
     TASK_COMPLETION_WAIT = 30
+    INITIAL_CLUSTER_SIZE = 2
 
     def __init__(self, job_name=None, build_number=None, master_ip=None, configs_directory=None, session=None):
         self.check_sit(configs_directory=configs_directory, session=session)
@@ -50,6 +51,7 @@ class ReviewJob(object):
         self.init_boto_clients(session=session)
         self.cluster = self.get_cluster()
         self.autoscaling_group = self.get_autoscaling_group()
+        self.running_task_ids = []
 
     def check_sit(self, configs_directory, session):
         CheckSIT(configs_directory=configs_directory, session=session).run()
@@ -64,15 +66,15 @@ class ReviewJob(object):
     def run(self):
         self.prepare_cluster()
         tasks = self.register_tasks()
-        task_ids = self.start_tasks(tasks)
-        self.wait_for_tasks_to_complete(task_ids)
+        self.start_tasks(tasks)
+        self.wait_for_tasks_to_complete()
 
     def prepare_cluster(self):
         capacity = self.get_current_desired_capacity()
         logging.info('Current SIT Cluster capacity: {0}'.format(capacity))
         if capacity == 0:
-            logging.info('Cluster is currently empty. Launching the first instance.')
-            self.set_current_desired_capacity(1)
+            logging.info('Cluster is currently empty. Launching instances.')
+            self.set_current_desired_capacity(self.INITIAL_CLUSTER_SIZE)
         self.wait_for_first_instance()
 
     def wait_for_first_instance(self, attempt=1):
@@ -135,11 +137,9 @@ class ReviewJob(object):
     def start_tasks(self, tasks):
         logging.info('Starting tasks: {0}'.format(tasks))
         try:
-            task_ids = []
             for task in tasks:
                 response = self.attempt_start_task(task)
-                task_ids.append(response['tasks'][0]['taskArn'])
-            return task_ids
+                self.running_task_ids.append(response['tasks'][0]['taskArn'])
         except Exception as e:
             self.error('Failed to run tasks', e)
 
@@ -157,23 +157,25 @@ class ReviewJob(object):
             response = self.attempt_start_task(task, attempt+1)
         return response
 
-    def wait_for_tasks_to_complete(self, task_ids, attempt=0):
+    def wait_for_tasks_to_complete(self, attempt=0):
         if attempt > self.ATTEMPT_LIMIT:
             self.error('{0} attempts have gone by. Initiating termination sequence'.format(self.ATTEMPT_LIMIT))
-        task_responses = self.get_task_responses(task_ids)
+        task_responses = self.get_task_responses()
         try:
-            status = filter(lambda task: task['lastStatus'] != "STOPPED", task_responses)
-            if status:
-                logging.info('Tasks are still running. Waiting for {0} seconds'.format(self.TASK_COMPLETION_WAIT))
+            running_tasks = filter(lambda task: task['lastStatus'] != "STOPPED", task_responses)
+            if running_tasks:
+                self.running_task_ids = map(lambda task: task['taskArn'], running_tasks)
+                logging.info('{0} Tasks are still running. Waiting for {1} seconds'.format(
+                    len(self.running_task_ids), self.TASK_COMPLETION_WAIT))
                 sleep(self.TASK_COMPLETION_WAIT)
-                return self.wait_for_tasks_to_complete(task_ids, attempt + 1)
+                return self.wait_for_tasks_to_complete(attempt + 1)
         except Exception as e:
             self.error('Failed determining status of task', e)
         logging.info("Tasks are complete")
 
-    def get_task_responses(self, task_ids):
+    def get_task_responses(self):
         try:
-            return self.ecs_client.describe_tasks(cluster=self.cluster, tasks=task_ids)['tasks']
+            return self.ecs_client.describe_tasks(cluster=self.cluster, tasks=self.running_task_ids)['tasks']
         except Exception as e:
             self.error('Failed to retrieve tasks from cluster.', e)
 
@@ -268,8 +270,21 @@ class ReviewJob(object):
         except Exception as e:
             self.error('unable to join items: {0} with delimeter: {1}.'.format(items, delimeter), e)
 
+    def terminate_running_tasks(self):
+        task_definitions = []
+        try:
+            for task_id in self.running_task_ids:
+                response = self.ecs_client.stop_task(task=task_id, cluster=self.cluster)
+                task_definitions.append(response['task']['taskDefinitionArn'])
+        except Exception as e:
+            logging.error('Error occurred while terminating tasks.', e)
+        finally:
+            return task_definitions
+
     def error(self, message, e=None, error_code=2):
-        logging.info('{0}. Exception: {1}'.format(message, e))
+        terminated_tasks = self.terminate_running_tasks()
+        logging.info('{0}. Exception: {1}\nFollowing tasks have been terminated: {2}'.format(
+            message, e, terminated_tasks))
         exit(error_code)
 
 
