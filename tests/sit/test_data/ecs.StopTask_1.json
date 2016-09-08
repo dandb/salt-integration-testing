@@ -1,0 +1,18 @@
+{
+    "status_code": 200, 
+    "data": {
+        "task": {
+            "taskArn": "arn:aws:ecs:us-west-1:123:task/123456",
+            "lastStatus": "RUNNING", 
+            "containerInstanceArn": "arn:aws:ecs:us-west-1:1234:container-instance/1234",
+            "clusterArn": "arn:aws:ecs:us-west-1:1234:cluster/sit-tool-test-sitClusterTest",
+            "desiredStatus": "STOPPED", 
+            "stoppedReason": "Task stopped by user", 
+            "taskDefinitionArn": "arn:aws:ecs:us-west-1:54321:task-definition/apple_review-3-fruits:2"
+        }, 
+        "ResponseMetadata": {
+            "HTTPStatusCode": 200, 
+            "RequestId": "76cc9503-7593-11e6-96de-7178042921da"
+        }
+    }
+}
