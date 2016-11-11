@@ -24,5 +24,5 @@ class UserDataTest(unittest.TestCase):
 
     def test_get_environment_variables(self):
         result = self.container.get_container_definitions()
-        expected_answer = {'environment': [{'name': 'roles', 'value': 'server,php'}, {'name': 'env', 'value': 'qa'}, {'name': 'master', 'value': '1.2.3.4'}, {'name': 'minion_id', 'value': 'test'}], 'image': 'dandb/salt_review:2015-8-7', 'cpu': 512, 'name': 'test', 'memory': 10}
+        expected_answer = {'memoryReservation': 256, 'name': 'test', 'image': 'dandb/salt_review:2015-8-7', 'environment': [{'name': 'roles', 'value': 'server,php'}, {'name': 'env', 'value': 'qa'}, {'name': 'master', 'value': '1.2.3.4'}, {'name': 'minion_id', 'value': 'test'}], 'memory': 10, 'cpu': 512}
         self.assertEquals(result, expected_answer)
