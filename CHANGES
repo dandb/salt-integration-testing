@@ -1,1 +1,3 @@
+v0.0.3 Adds ability to create tasks with memoryReservation parameter
+v0.0.2 Autoscales ECS instances via CloudFormation alarms and ECS metrics
 v0.0.1 First working version

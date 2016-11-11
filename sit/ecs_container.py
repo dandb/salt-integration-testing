@@ -7,6 +7,7 @@ class Container(object):
         self.sit_helper = SITHelper(configs_directory)
         sit_configs = self.sit_helper.get_configs('sit')
         self.MEMORY = sit_configs['container_memory']
+        self.MEMORY_RESERVATION = sit_configs.get('container_memory_reservation', self.MEMORY)
         self.CPU = sit_configs['container_cpu']
         self.IMAGE = sit_configs['container_image']
         self.family = family
@@ -20,7 +21,8 @@ class Container(object):
             "memory": self.MEMORY,
             "cpu": self.CPU,
             "image": self.IMAGE,
-            "environment": self.get_environment_variables()
+            "environment": self.get_environment_variables(),
+            "memoryReservation": self.MEMORY_RESERVATION
         }
 
     def get_environment_variables(self):

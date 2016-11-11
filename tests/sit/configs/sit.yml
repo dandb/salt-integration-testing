@@ -6,6 +6,7 @@ profile_name: 'default'
 
 # Docker container configs
 container_memory: 512
+container_memory_reservation: 256
 container_cpu: 512
 container_image: 'dandb/salt_review:2015-8-7'
 
