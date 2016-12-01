@@ -1,6 +1,11 @@
 # Max number of attempts used for task run-time, each attempt is separated by 30s
 attempt_limit: 80
 
+# Max number of attempts before which code gives up waiting on resources
+# (cpu/memory) to become available in the ecs cluster.
+resources_attempt_limit: 20
+initial_cluster_size: 2
+
 # aws profile
 profile_name: 'default'
 

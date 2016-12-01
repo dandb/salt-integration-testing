@@ -1,1 +1,3 @@
 lb:
+  priority: 1
+  subroles:

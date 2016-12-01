@@ -1,5 +1,6 @@
 # Max number of attempts used for task run-time, each attempt is separated by 30s
 attempt_limit:
+initial_cluster_size:
 
 # aws profile
 profile_name: ''

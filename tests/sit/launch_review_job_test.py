@@ -69,3 +69,23 @@ class LaunchReviewJobTest(unittest.TestCase):
             launch_review.wait_for_tasks_to_complete(attempt=5)
         except SystemExit as se:
             self.assertEquals(se.code, 2)
+
+    @patch.object(ReviewJob, 'check_sit', return_value=None)
+    @patch.object(ReviewJob, 'get_cluster', return_value='test-cluster')
+    @patch.object(ReviewJob, 'get_autoscaling_group', return_value='test-asg')
+    def test_wait_for_first_instance_timeout(self, *args):
+        launch_review = ReviewJob('test', '1', '1.2.3.4', configs_directory='tests/sit/configs', session=self.session)
+        try:
+            launch_review.wait_for_first_instance(11)
+        except SystemExit as se:
+            self.assertEquals(se.code, 2)
+
+    @patch.object(ReviewJob, 'check_sit', return_value=None)
+    @patch.object(ReviewJob, 'get_cluster', return_value='test-cluster')
+    @patch.object(ReviewJob, 'get_autoscaling_group', return_value='test-asg')
+    def test_attempt_start_task_timeout(self, *args):
+        launch_review = ReviewJob('test', '1', '1.2.3.4', configs_directory='tests/sit/configs', session=self.session)
+        try:
+            launch_review.attempt_start_task('task-1', 25)
+        except SystemExit as se:
+            self.assertEquals(se.code, 2)

@@ -1,11 +1,15 @@
 # sample role configurations. 
 # Each key is a server role you wish to test. 
-# Each role should contain an array of salt states you wish to apply 
+# Each role should contain a priority and an array of subroles (salt states) you wish to apply
 # Generated YML structure should look similar to the example below
 
 
 #php:
-#  - server
+#  priority: 1
+#  subroles:
+#    - server
 #lb:
+#  priority: 2
+#  subroles:
 #  - lb
 #  - server

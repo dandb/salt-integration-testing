@@ -29,9 +29,8 @@ class SITTemplate(object):
         self.CLUSTER_NAME = configs['cluster_name']
         self.AUTOSCALING_GROUP_NAME = configs['autoscaling_group_name']
         self.LAUNCH_CONFIGURATION_NAME = configs['launch_configuration_name']
-        self.SCALING_METRIC = configs['scaling_metric']
-        self.SCALE_UP_THRESHOLD = configs['scale_up_threshold']
-        self.SCALE_DOWN_THRESHOLD = configs['scale_down_threshold']
+        self.AUTOSCALE_UP_ALARMS = configs['autoscale_up_alarms']
+        self.AUTOSCALE_DOWN_ALARMS = configs['autoscale_down_alarms']
         self.ECS_TASK_CLEANUP_WAIT = configs['ecs_task_cleanup_wait_duration']
         self.template = Template()
         self.user_data = UserData(configs_directory)
@@ -177,6 +176,7 @@ class SITTemplate(object):
                 self.AUTOSCALING_GROUP_NAME, 
                 MaxSize=self.MAX_SIZE,
                 MinSize=self.MIN_SIZE,
+                Cooldown=60,
                 LaunchConfigurationName=Ref(launch_configuration),
                 VPCZoneIdentifier=[self.SUBNET]
             )
@@ -191,25 +191,26 @@ class SITTemplate(object):
             ScalingAdjustment='1'
         ))
 
-        """ Cloud Watch Alarm """
-        self.template.add_resource(Alarm(
-            '{0}ScaleUpAlarm'.format(self.AUTOSCALING_GROUP_NAME),
-            ActionsEnabled=True,
-            Namespace='AWS/ECS',
-            MetricName=self.SCALING_METRIC,
-            ComparisonOperator='GreaterThanOrEqualToThreshold',
-            Threshold=self.SCALE_UP_THRESHOLD,
-            EvaluationPeriods=1,
-            Statistic='Average',
-            Period=60,
-            AlarmActions=[Ref(scaling_up_policy)],
-            Dimensions=[
-                MetricDimension(
-                    Name='ClusterName',
-                    Value=Ref(ecs_cluster)
-                )
-            ]
-        ))
+        for alarm_name, alarm in self.AUTOSCALE_UP_ALARMS.iteritems():
+            """ Cloud Watch Alarm """
+            self.template.add_resource(Alarm(
+                '{0}ScaleUp{1}'.format(self.AUTOSCALING_GROUP_NAME, alarm_name),
+                ActionsEnabled=True,
+                Namespace='AWS/ECS',
+                MetricName=alarm['scaling_metric'],
+                ComparisonOperator='GreaterThanOrEqualToThreshold',
+                Threshold=alarm['scale_up_threshold'],
+                EvaluationPeriods=1,
+                Statistic=alarm['statistic'],
+                Period=alarm['period'],
+                AlarmActions=[Ref(scaling_up_policy)],
+                Dimensions=[
+                    MetricDimension(
+                        Name='ClusterName',
+                        Value=Ref(ecs_cluster)
+                    )
+                ]
+            ))
 
         """ Scale DOWN Policy """
         scaling_down_policy = self.template.add_resource(ScalingPolicy(
@@ -220,25 +221,26 @@ class SITTemplate(object):
             ScalingAdjustment='-1'
         ))
 
-        """ Cloud Watch Alarm """
-        self.template.add_resource(Alarm(
-            '{0}ScaleDownAlarm'.format(self.AUTOSCALING_GROUP_NAME),
-            ActionsEnabled=True,
-            Namespace='AWS/ECS',
-            MetricName=self.SCALING_METRIC,
-            ComparisonOperator='LessThanOrEqualToThreshold',
-            Threshold=self.SCALE_DOWN_THRESHOLD,
-            EvaluationPeriods=1,
-            Statistic='Average',
-            Period=300,
-            AlarmActions=[Ref(scaling_down_policy)],
-            Dimensions=[
-                MetricDimension(
-                    Name='ClusterName',
-                    Value=Ref(ecs_cluster)
-                )
-            ]
-        ))
+        for alarm_name, alarm in self.AUTOSCALE_DOWN_ALARMS.iteritems():
+            """ Cloud Watch Alarm """
+            self.template.add_resource(Alarm(
+                '{0}ScaleDown{1}'.format(self.AUTOSCALING_GROUP_NAME, alarm_name),
+                ActionsEnabled=True,
+                Namespace='AWS/ECS',
+                MetricName=alarm['scaling_metric'],
+                ComparisonOperator='LessThanOrEqualToThreshold',
+                Threshold=alarm['scale_down_threshold'],
+                EvaluationPeriods=1,
+                Statistic=alarm['statistic'],
+                Period=alarm['period'],
+                AlarmActions=[Ref(scaling_down_policy)],
+                Dimensions=[
+                    MetricDimension(
+                        Name='ClusterName',
+                        Value=Ref(ecs_cluster)
+                    )
+                ]
+            ))
 
 if __name__ == '__main__':
     SITTemplate().print_template()
