@@ -11,14 +11,15 @@ class SITHelper(object):
     def get_states_for_role(self, role):
         roles = self.get_configs('roles')
         try:
-            return roles[role]
+            return roles[role]['subroles']
         except Exception as e: 
             return 'Failed to find state list for role: {0}. error: {1}'.format(role, e)
 
     def get_roles(self):
         roles = self.get_configs('roles')
         if roles is not None:
-            return roles.keys() 
+            sorted_roles = sorted(roles.items(), key=lambda x: x[1]['priority'])
+            return map(lambda x: x[0], sorted_roles)
         return False
 
     def get_configs(self, config_file):

@@ -13,8 +13,8 @@ class SitHelperTest(unittest.TestCase):
         self.assertEquals(self.sit_helper.get_custom_user_data(), "'test'\n")
 
     def test_get_roles(self):
-        self.assertEquals(self.sit_helper.get_roles(), ['php', 'lb'])
-        self.assertEquals(self.sit_helper.get_roles(), ['php', 'lb'])
+        self.assertEquals(self.sit_helper.get_roles(), ['lb', 'php'])
+        self.assertEquals(self.sit_helper.get_roles(), ['lb', 'php'])
         self.assertEquals(self.sit_helper_empty.get_roles(), False)
 
     def test_get_states_for_role(self):
@@ -24,4 +24,5 @@ class SitHelperTest(unittest.TestCase):
                           "Failed to find state list for role: saltmaster. error: 'saltmaster'")
 
     def test_get_configs(self):
-        self.assertEquals(self.sit_helper.get_configs('roles'), {'php': ['apache', 'server'], 'lb': ['lb', 'server']})
+        self.assertEquals(self.sit_helper.get_configs('roles'), {'lb': {'priority': 1, 'subroles': ['lb', 'server']},
+                                                                 'php': {'priority': 2, 'subroles': ['apache', 'server']}})

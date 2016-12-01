@@ -36,9 +36,24 @@ min_size: 0
 ecs_task_cleanup_wait_duration: '20m'
 
 ## Cloudwatch Alarm Configs
-scaling_metric: 'CPUReservation'
-scale_up_threshold: '70'
-scale_down_threshold: '20'
+autoscale_down_alarms:
+  cpualarm:
+    scaling_metric: 'CPUReservation'
+    scale_down_threshold: '0'
+    statistic: Average
+    period: 900
+
+autoscale_up_alarms:
+  cpualarm:
+    scaling_metric: 'CPUReservation'
+    scale_up_threshold: '70'
+    statistic: Average
+    period: 60
+  memoryalarm:
+    scaling_metric: 'MemoryReservation'
+    scale_up_threshold: '80'
+    statistic: Average
+    period: 60
 
 ## General configs
 tag_key: 'Name'

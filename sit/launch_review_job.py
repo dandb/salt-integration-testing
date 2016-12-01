@@ -26,7 +26,6 @@ class ReviewJob(object):
     CONTAINER_INSTANCE_WAIT = 30
     CLUSTER_RESOURCE_WAIT = 60
     TASK_COMPLETION_WAIT = 30
-    INITIAL_CLUSTER_SIZE = 2
 
     def __init__(self, job_name=None, build_number=None, master_ip=None, configs_directory=None, session=None):
         self.check_sit(configs_directory=configs_directory, session=session)
@@ -40,6 +39,8 @@ class ReviewJob(object):
         self.STACK_NAME = troposphere_configs['stack_name']
         self.ROLES = sit_helper.get_roles()
         self.ATTEMPT_LIMIT = sit_configs['attempt_limit']
+        self.RESOURCES_ATTEMPT_LIMIT = sit_configs['resources_attempt_limit']
+        self.INITIAL_CLUSTER_SIZE = sit_configs['initial_cluster_size']
         self.SAVE_LOGS = sit_configs['save_logs']
         self.HIGHSTATE_LOG_DIR = sit_configs['highstate_log_dir']
         self.cf_helper = CFHelper(configs_directory=configs_directory, session=session)
@@ -72,10 +73,16 @@ class ReviewJob(object):
     def prepare_cluster(self):
         capacity = self.get_current_desired_capacity()
         logging.info('Current SIT Cluster capacity: {0}'.format(capacity))
-        if capacity == 0:
-            logging.info('Cluster is currently empty. Launching instances.')
+        if capacity < self.INITIAL_CLUSTER_SIZE:
+            logging.info('Cluster is currently empty or inadequate. Setting Desired Capacity to {0}'.format(
+                self.INITIAL_CLUSTER_SIZE))
             self.set_current_desired_capacity(self.INITIAL_CLUSTER_SIZE)
         self.wait_for_first_instance()
+
+    def scale_up_cluster(self):
+        capacity = self.get_current_desired_capacity()
+        logging.info('Increasing Current SIT Cluster capacity from {0} to {1}'.format(capacity, capacity+1))
+        self.set_current_desired_capacity(capacity+(2*self.INITIAL_CLUSTER_SIZE))
 
     def wait_for_first_instance(self, attempt=1):
         if attempt > 10:
@@ -135,26 +142,30 @@ class ReviewJob(object):
         return container.get_container_definitions()
 
     def start_tasks(self, tasks):
-        logging.info('Starting tasks: {0}'.format(tasks))
         try:
             for task in tasks:
                 response = self.attempt_start_task(task)
+                logging.info('Task: {0} has started running..'.format(task))
                 self.running_task_ids.append(response['tasks'][0]['taskArn'])
         except Exception as e:
             self.error('Failed to run tasks', e)
 
-    def attempt_start_task(self, task, attempt=1):
-        if attempt > 10:
+    def attempt_start_task(self, task, attempt=1, scaleup_required=True):
+        if attempt > self.RESOURCES_ATTEMPT_LIMIT:
             self.error('Task {0} could not start. Timed out waiting for resources.'.format(task))
         response = self.ecs_client.run_task(
             cluster=self.cluster,
             taskDefinition=task
         )
         if response['failures'] and self.TASK_FAILURE_REASON in response['failures'][0]['reason']:
-            logging.info('Task: {0} failed to start due to unavailable Resources. Waiting 60 seconds.'
-                         .format(task))
+            logging.info('Task: {0} failed to start due to unavailable Resources. Waiting 60 seconds.'.format(task))
+            if scaleup_required:
+                self.scale_up_cluster()
             sleep(self.CLUSTER_RESOURCE_WAIT)
-            response = self.attempt_start_task(task, attempt+1)
+            response = self.attempt_start_task(task, attempt+1, scaleup_required=False)
+        elif response['failures']:
+            raise ValueError('Task: {0} failed to start due to unexpected reason:{1}'.format(
+                task, response['failures'][0]['reason']))
         return response
 
     def wait_for_tasks_to_complete(self, attempt=0):
@@ -163,8 +174,8 @@ class ReviewJob(object):
         task_responses = self.get_task_responses()
         try:
             running_tasks = filter(lambda task: task['lastStatus'] != "STOPPED", task_responses)
+            self.running_task_ids = map(lambda task: task['taskArn'], running_tasks)
             if running_tasks:
-                self.running_task_ids = map(lambda task: task['taskArn'], running_tasks)
                 logging.info('{0} Tasks are still running. Waiting for {1} seconds'.format(
                     len(self.running_task_ids), self.TASK_COMPLETION_WAIT))
                 sleep(self.TASK_COMPLETION_WAIT)

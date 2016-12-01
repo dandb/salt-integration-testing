@@ -1,7 +1,11 @@
 php:
-  - apache
-  - server
+  priority: 2
+  subroles:
+    - apache
+    - server
 
 lb:
-  - lb
-  - server
+  priority: 1
+  subroles:
+    - lb
+    - server
