@@ -81,8 +81,9 @@ class ReviewJob(object):
 
     def scale_up_cluster(self):
         capacity = self.get_current_desired_capacity()
-        logging.info('Increasing Current SIT Cluster capacity from {0} to {1}'.format(capacity, capacity+1))
-        self.set_current_desired_capacity(capacity+(2*self.INITIAL_CLUSTER_SIZE))
+        new_cluster_size = capacity + self.INITIAL_CLUSTER_SIZE
+        logging.info('Increasing Current SIT Cluster capacity from {0} to {1}'.format(capacity, new_cluster_size))
+        self.set_current_desired_capacity(new_cluster_size)
 
     def wait_for_first_instance(self, attempt=1):
         if attempt > 10:
@@ -109,7 +110,7 @@ class ReviewJob(object):
     def display_instances_private_ips(self, instance_ids):
         try:
             instance_reservations = self.ec2_client.describe_instances(InstanceIds=instance_ids)['Reservations']
-            ips = map(lambda reservation: reservation['Instances'][0]['PrivateIpAddress'], instance_reservations)
+            ips = [instance['PrivateIpAddress'] for reservation in instance_reservations for instance in reservation['Instances']]
             logging.info('SIT Cluster Instance IPs: {0}'.format(ips))
         except Exception as e:
             logging.warn('Failed to describe instance(s): {0}. Error: {1}'.format(instance_ids, e))
