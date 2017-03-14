@@ -14,6 +14,7 @@ sed -i "s/{{ ROLES }}/- $roles/" minion
 sed -i "s/,/\n    - /g" minion 
 sed -i "s/{{ MINION_ID }}/$minion_id/" minion
 sed -i "s/{{ ENV }}/$env/" minion
+sed -i "s/{{ REDIS_HOST }}/$redis_host/" minion
 
 # Since we are modifying the minion config, we need to restart salt
 /sbin/service salt-minion restart 

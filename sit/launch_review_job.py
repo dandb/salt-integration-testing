@@ -43,6 +43,7 @@ class ReviewJob(object):
         self.INITIAL_CLUSTER_SIZE = sit_configs['initial_cluster_size']
         self.SAVE_LOGS = sit_configs['save_logs']
         self.HIGHSTATE_LOG_DIR = sit_configs['highstate_log_dir']
+        self.REDIS_HOST = sit_configs.get('redis_host', None)
         self.cf_helper = CFHelper(configs_directory=configs_directory, session=session)
         self.family = self.join_items([job_name, build_number])
         self.master_ip = master_ip
@@ -139,7 +140,7 @@ class ReviewJob(object):
             self.error('Failed to register tasks for family: {0}, role: {1}'.format(family, role), e)
 
     def get_container_definitions(self, role, family):
-        container = Container(configs_directory=self.configs_directory, env='local', role=role, family=family, master_ip=self.master_ip)
+        container = Container(configs_directory=self.configs_directory, env='local', role=role, family=family, master_ip=self.master_ip, redis_host=self.REDIS_HOST)
         return container.get_container_definitions()
 
     def start_tasks(self, tasks):
@@ -192,7 +193,7 @@ class ReviewJob(object):
             self.error('Failed to retrieve tasks from cluster.', e)
 
     def check_and_print_results(self):
-        redis_client = RedisClient()
+        redis_client = RedisClient(self.REDIS_HOST)
         for role in self.ROLES:
             family = self.join_items([self.family, role])
             highstate_result = redis_client.get_highstate_result(family)

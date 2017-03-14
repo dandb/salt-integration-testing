@@ -3,7 +3,7 @@ from helpers.sit_helper import SITHelper
 
 class Container(object):
 
-    def __init__(self, configs_directory=None, family=None, role=None, master_ip=None, env='local'):
+    def __init__(self, configs_directory=None, family=None, role=None, master_ip=None, env='local', redis_host=None):
         self.sit_helper = SITHelper(configs_directory)
         sit_configs = self.sit_helper.get_configs('sit')
         self.MEMORY = sit_configs['container_memory']
@@ -14,6 +14,7 @@ class Container(object):
         self.role = role
         self.master_ip = master_ip
         self.env = env
+        self.redis_host = self.generate_redis_host(master_ip, redis_host)
 
     def get_container_definitions(self):
         return {
@@ -31,7 +32,12 @@ class Container(object):
         environment_variables.append(Container.get_environment_dictionary('env', self.env))
         environment_variables.append(Container.get_environment_dictionary('master', self.master_ip))
         environment_variables.append(Container.get_environment_dictionary('minion_id', self.family))
+        environment_variables.append(Container.get_environment_dictionary('redis_host', self.redis_host))
         return environment_variables
+
+    @staticmethod
+    def generate_redis_host(master_ip, redis_host):
+        return redis_host if redis_host else master_ip
 
     @staticmethod
     def get_environment_dictionary(name, value):
