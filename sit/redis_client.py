@@ -9,8 +9,8 @@ class RedisClient(object):
 
     HIGHSTATE = 'state.highstate'
 
-    def __init__(self):
-        self.redis_instance = self.connect_redis()
+    def __init__(self, host='localhost'):
+        self.redis_instance = self.connect_redis(host=host)
 
     def connect_redis(self,  host='localhost', port=6379, timeout=2):
         try:
