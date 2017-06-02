@@ -218,7 +218,7 @@ class ReviewJob(object):
 
     def highstate_failed(self, result):
         try:
-            possible_failures = ['"result": false', 'Data failed to compile:', 'Pillar failed to render with the following messages:']
+            possible_failures = ['"result": false', 'Data failed to compile:', 'Pillar failed to render with the following messages:', 'Detected conflicting IDs']
             failures = [failure in result for failure in possible_failures]
             if True not in failures:
                 failures = self.check_regex_failure(failures, result)
