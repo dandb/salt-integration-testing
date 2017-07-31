@@ -1,4 +1,4 @@
 boto3
 pyaml
-troposphere
+troposphere[policy]
 redis
