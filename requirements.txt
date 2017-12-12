@@ -2,3 +2,4 @@ boto3
 pyaml
 troposphere[policy]
 redis
+cfn_flip==0.2.5
