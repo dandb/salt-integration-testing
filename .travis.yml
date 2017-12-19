@@ -3,6 +3,8 @@ python:
   - "2.6"
   - "2.7"
 install:
+  - pip freeze
+  - pip uninstall -y ordereddict
   - pip install -r tests/requirements.txt
   - pip install coveralls
 script: 
