@@ -1,4 +1,4 @@
 boto3
 pyaml
-troposphere[policy]
+troposphere[policy]==2.0.2
 redis

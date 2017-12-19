@@ -3,5 +3,5 @@ placebo
 boto3
 pyaml
 mock
-troposphere
+troposphere==2.0.2
 fakeredis
