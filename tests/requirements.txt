@@ -4,4 +4,4 @@ boto3
 pyaml
 mock
 troposphere==2.0.2
-fakeredis
+fakeredis==0.9.0

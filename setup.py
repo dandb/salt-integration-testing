@@ -23,7 +23,7 @@ if not needs_install:
 
 setup(
     name="salt-sit",
-    version="0.0.2",
+    version="0.0.3",
     author="Dun and Bradstreet",
     author_email="sit.dandb@gmail.com",
     description=('Salt Integration Testing Tool -- applies role configurations to Docker container minions using AWS (Amazon Web Services) ECS (EC2 Container Service)'),

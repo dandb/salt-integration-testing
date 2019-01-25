@@ -223,7 +223,8 @@ class ReviewJob(object):
                 'Data failed to compile:',
                 'Pillar failed to render with the following messages:',
                 'Detected conflicting IDs',
-                'Cannot extend ID'
+                'Cannot extend ID',
+                'not available on the salt master or through a configured fileserver'
             ]
             failures = [failure in result for failure in possible_failures]
             if True not in failures:
